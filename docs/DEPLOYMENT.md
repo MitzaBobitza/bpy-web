@@ -4,21 +4,117 @@ This adds the website to a **bancho.py server that is already running**, set up
 with the [official guide](https://github.com/osuAkatsuki/bancho.py/wiki/Setting-up)
 — Docker for the app, nginx installed via `./scripts/install-nginx-config.sh`.
 
-> **For the staff area and clan management**, clone
+> **For the staff area and clan management**, run
 > [this fork of bancho.py](https://github.com/MitzaBobitza/bancho.py) in place of
 > upstream. It adds the `/v2/admin` and `/v2/clans` endpoints those need and is
-> otherwise the same server, so every other step below is unchanged. Against
-> upstream the site works normally, `/admin` returns 404, and the clan pages
-> list clans without the management controls.
->
-> The fork carries a database migration (a `clan_invites` table). bancho.py
-> applies it on the next start, so there is nothing extra to run.
+> otherwise the same server, so every step below is unchanged. Against upstream
+> the site still works — `/admin` returns 404 and the clan pages list clans
+> without the management controls. **Already running upstream? See
+> [step 0](#0-optional-switch-an-existing-server-to-the-fork).**
 
 Nothing here changes how bancho.py itself is installed or run. It leaves
 `bancho.conf` untouched, so re-running `install-nginx-config.sh` later will not
 undo any of it.
 
 Replace `example.com` with your domain and `deploy` with your username.
+
+---
+
+## 0. Optional: switch an existing server to the fork
+
+Skip this if you are happy without the staff area and clan management, or if
+you are installing bancho.py fresh — in that case just clone the fork instead
+of upstream.
+
+The fork sits directly on top of upstream's `master` with no divergence, so
+this is a fast-forward, not a merge. It adds one table and changes no existing
+one.
+
+**Back the database up first.** This is the only step that touches player data,
+and you want the file whether or not anything goes wrong:
+
+```bash
+cd ~/bancho.py
+set -a; . ./.env; set +a          # DB_USER, DB_PASS and DB_NAME come from here
+
+docker compose exec -T mysql \
+  mysqldump -u"$DB_USER" -p"$DB_PASS" --single-transaction "$DB_NAME" \
+  > ~/banchopy-$(date +%F).sql
+
+ls -lh ~/banchopy-*.sql           # confirm it is not empty
+tail -1 ~/banchopy-*.sql          # should end with "Dump completed"
+```
+
+> The compose file gives MySQL a random root password, so use `DB_USER` — root
+> is not something you can log in as.
+
+Note which version you are on — the migration runner replays everything between
+that and the fork's `5.3.1`:
+
+```bash
+docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+  -e "SELECT ver_major, ver_minor, ver_micro, datetime FROM startups ORDER BY datetime DESC LIMIT 1"
+```
+
+Then point the checkout at the fork and rebuild:
+
+```bash
+cd ~/bancho.py
+git remote add fork https://github.com/MitzaBobitza/bancho.py.git
+git fetch fork
+git status --short                 # must be empty; commit or stash local edits
+git merge --ff-only fork/master    # refuses rather than merging if you diverged
+
+docker compose build bancho
+docker compose up -d
+docker compose logs -f bancho      # watch for "Updating mysql structure"
+```
+
+Your `.env`, `.data` and database are untouched by this — only the code
+changes.
+
+> **Not running under Docker?** Same git steps, then refresh dependencies with
+> `uv sync --no-install-project` and restart however you run it
+> (`sudo systemctl restart bancho`). The migration runs at startup either way.
+> Drop the `docker compose exec -T mysql` prefix from the database commands
+> here and run `mysql` directly.
+
+Confirm the migration landed and the new endpoints answer:
+
+```bash
+docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+  -e "SHOW TABLES LIKE 'clan_invites'"
+
+curl -H "Host: api.example.com" http://127.0.0.1:10000/v2/clans
+```
+
+`clan_invites` should be listed, and the clans call should return a success
+envelope rather than `{"detail":"Not Found"}`.
+
+**If you need to go back**, `git merge --ff-only` means upstream is still in
+your history:
+
+```bash
+cd ~/bancho.py
+git checkout <the commit you noted from git log before merging>
+docker compose build bancho && docker compose up -d
+```
+
+The `clan_invites` table stays behind unused, which is harmless, and the
+migration is written so that coming forward to the fork again re-applies
+cleanly.
+
+> **Give yourself the staff privileges** once you are on the fork, if you do
+> not already have them. From the server, in the bancho.py directory:
+>
+> ```bash
+> docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+>   -e "UPDATE users SET priv = priv | 31744 WHERE name = 'YourName'"
+> ```
+>
+> That adds tournament manager, nominator, moderator, administrator and
+> developer at once. Privileges are independent bits with no hierarchy, which
+> is why they are set together. Sign out and back in on the website afterwards.
 
 ---
 
@@ -347,6 +443,8 @@ Then in a browser, on `https://example.com`:
 
 ## 7. Updating
 
+The website:
+
 ```bash
 cd ~/bpy-web
 git pull
@@ -354,6 +452,17 @@ npm ci
 npm run build
 sudo systemctl restart bpy-web
 ```
+
+The fork of bancho.py, if you are running it:
+
+```bash
+cd ~/bancho.py
+git pull fork master
+docker compose build bancho && docker compose up -d
+```
+
+Back the database up first whenever a pull brings a new `# vX.Y.Z` block in
+`migrations/migrations.sql` — that is the signal that the schema changes.
 
 ---
 
