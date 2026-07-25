@@ -252,22 +252,6 @@ export interface ServerStats {
 
 // ── v1-only shapes ───────────────────────────────────────────────────────
 
-/** `GET /get_clan` — the only endpoint exposing clan membership. */
-export interface ClanWithMembers {
-  id: number;
-  name: string;
-  tag: string;
-  members: ClanMember[];
-  owner: ClanMember | null;
-}
-
-export interface ClanMember {
-  id: number;
-  name: string;
-  country: string;
-  rank: "Member" | "Officer" | "Owner";
-}
-
 /** `GET /get_match` — live multiplayer match state. */
 export interface Match {
   name: string;

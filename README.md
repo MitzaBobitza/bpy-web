@@ -21,7 +21,7 @@ every page reads from bancho.py's HTTP API.
 | **Profiles** | Per-mode statistics, global and country ranks, top plays with pp weighting, recent plays, most played beatmaps, grade counts, userpage, badges, clan and play style |
 | **Beatmaps** | Browse and filter by status, mode, artist and mapper; per-difficulty pages with leaderboards for every mode, difficulty meters, ratings and downloads |
 | **Scores** | Score detail with hit breakdown, mods, timing and replay download |
-| **Clans** | Listing with member counts, and clan pages with ranked membership |
+| **Clans** | Listing with member counts, clan pages with ranked membership, and full clan management — see below |
 | **Multiplayer** | Live match list with slots, teams, mods and the current beatmap |
 | **Tournaments** | Published mappools, grouped by bracket slot |
 | **Accounts** | Registration with optional captcha, sign-in, sign-out, avatar upload, username / country / default mode / userpage editing, password change |
@@ -114,6 +114,42 @@ Every setting is in `.env.example`, with notes. Two are worth calling out:
   `CAPTCHA_PROVIDER` and `CAPTCHA_SECRET`, and this app renders the widget with
   `NEXT_PUBLIC_CAPTCHA_PROVIDER` and `NEXT_PUBLIC_CAPTCHA_SITEKEY`. Leave all
   four empty to disable it.
+
+## Clans
+
+Clans are run entirely from the site — founding, invitations, ranks, renaming,
+transfers and disbanding — with no need to type `!clan` in game. Controls are
+gated on clan rank, and the server enforces the same boundaries.
+
+| Rank | What it can do |
+|---|---|
+| Member | Leave the clan |
+| Officer | Invite players, withdraw invites, remove ordinary members |
+| Owner | Everything, plus promote and demote, rename and re-tag, transfer, disband |
+
+Server staff can additionally disband any clan, which is what
+`!clan disband <tag>` allows in game.
+
+Joining works by invitation: an officer invites by username, and the invite
+waits on `/clans` until the player accepts or declines. Accepting one turns
+down the rest. There is exactly one owner, so ownership moves by transfer
+rather than by promotion, and an owner has to hand the clan on or disband it
+before leaving.
+
+Two things follow from bancho.py's server-wide visibility rules, and are worth
+knowing:
+
+- **A player who has never logged in to the game cannot be invited.** Web
+  registration leaves an account unverified, which hides it everywhere —
+  player search included. One in-game login fixes it.
+- **A member who is restricted disappears from the roster**, for their
+  clanmates as well as the public. Clan rank grants no extra sight, because it
+  would otherwise reveal a restriction to everyone in the clan.
+
+Like the staff area, this needs endpoints that are part of
+[this fork of bancho.py](https://github.com/MitzaBobitza/bancho.py). Against an
+upstream server the clan pages still list clans and members, but the management
+controls are absent.
 
 ## The staff area
 

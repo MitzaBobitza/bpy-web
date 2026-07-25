@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CreateClanForm } from "@/components/clans/CreateClanForm";
+import { InvitationsInbox } from "@/components/clans/InvitationsInbox";
 import { Pagination } from "@/components/ui/navigation";
-import { EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
-import { getClanWithMembers, getClans } from "@/lib/bancho/api";
+import { ButtonLink, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
+import { getClans } from "@/lib/bancho/api";
+import { getClanRoster, getMyClanInvitations } from "@/lib/bancho/clans";
+import { getCurrentPlayer } from "@/lib/bancho/session";
 import { formatDate, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -21,18 +25,22 @@ export default async function ClansPage({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1);
 
-  const listing = await getClans(page, PAGE_SIZE);
+  const [listing, viewer, invitations] = await Promise.all([
+    getClans(page, PAGE_SIZE),
+    getCurrentPlayer(),
+    getMyClanInvitations(),
+  ]);
 
-  // the v2 clan model carries no member count, so membership comes from the
-  // v1 endpoint — the only one that exposes it
+  // the clan model carries no member count, so each roster is read alongside
   const clans = await Promise.all(
     listing.items.map(async (clan) => ({
       clan,
-      members: (await getClanWithMembers(clan.id))?.members ?? [],
+      members: await getClanRoster(clan.id),
     })),
   );
 
   const totalPages = Math.max(1, Math.ceil(listing.total / PAGE_SIZE));
+  const ownClanId = viewer?.clan_id || null;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -40,17 +48,38 @@ export default async function ClansPage({
         <p className="eyebrow">Community</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-ink">Clans</h1>
         <p className="mt-1.5 text-sm text-dim">
-          {formatNumber(listing.total)} {listing.total === 1 ? "clan" : "clans"}. Clans are created
-          and managed in game with the <code className="font-mono text-dim">!clan</code> command.
+          {formatNumber(listing.total)} {listing.total === 1 ? "clan" : "clans"}. Play
+          under a shared tag — run yours from here or in game with{" "}
+          <code className="font-mono text-dim">!clan</code>.
         </p>
       </header>
+
+      {ownClanId ? (
+        <div className="mt-5">
+          <ButtonLink href={`/clans/${ownClanId}`} variant="secondary">
+            Go to your clan
+          </ButtonLink>
+        </div>
+      ) : null}
+
+      {invitations.length > 0 ? (
+        <div className="mt-5">
+          <InvitationsInbox invitations={invitations} />
+        </div>
+      ) : null}
+
+      {viewer && !ownClanId ? (
+        <div className="mt-5">
+          <CreateClanForm />
+        </div>
+      ) : null}
 
       <Panel className="mt-6">
         <PanelHeader title="All clans" />
         {clans.length === 0 ? (
           <EmptyState
             title="No clans yet"
-            description="Anyone can start one in game with !clan create."
+            description="Anyone can start one — sign in and found the first."
           />
         ) : (
           <ul className="divide-y divide-line/60">

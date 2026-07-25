@@ -115,7 +115,7 @@ export default function ConnectPage() {
           <li>Multiplayer lobbies and in-game chat</li>
           <li>Replays, spectating and osu!direct beatmap downloads</li>
           <li>
-            Clans, created in game with <Code>!clan create</Code>
+            Clan tags beside your name, and <Code>!clan</Code> for managing one in game
           </li>
         </ul>
       </Section>

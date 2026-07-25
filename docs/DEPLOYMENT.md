@@ -4,11 +4,15 @@ This adds the website to a **bancho.py server that is already running**, set up
 with the [official guide](https://github.com/osuAkatsuki/bancho.py/wiki/Setting-up)
 — Docker for the app, nginx installed via `./scripts/install-nginx-config.sh`.
 
-> **For the staff area**, clone
+> **For the staff area and clan management**, clone
 > [this fork of bancho.py](https://github.com/MitzaBobitza/bancho.py) in place of
-> upstream. It adds the `/v2/admin` endpoints the panel needs and is otherwise
-> the same server, so every other step below is unchanged. Against upstream the
-> site works normally and `/admin` returns 404.
+> upstream. It adds the `/v2/admin` and `/v2/clans` endpoints those need and is
+> otherwise the same server, so every other step below is unchanged. Against
+> upstream the site works normally, `/admin` returns 404, and the clan pages
+> list clans without the management controls.
+>
+> The fork carries a database migration (a `clan_invites` table). bancho.py
+> applies it on the next start, so there is nothing extra to run.
 
 Nothing here changes how bancho.py itself is installed or run. It leaves
 `bancho.conf` untouched, so re-running `install-nginx-config.sh` later will not

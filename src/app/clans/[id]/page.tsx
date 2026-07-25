@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Avatar } from "@/components/osu/Avatar";
-import { CountryFlag } from "@/components/osu/badges";
+import { ClanManagement } from "@/components/clans/ClanManagement";
+import { ClanRoster } from "@/components/clans/ClanRoster";
+import { RankChip } from "@/components/clans/shell";
 import { EmptyState, Panel, PanelHeader, Stat } from "@/components/ui/primitives";
-import { getClan, getClanWithMembers, getPlayerStats } from "@/lib/bancho/api";
-import type { ClanMember } from "@/lib/bancho/types";
-import { formatAccuracy, formatDate, formatNumber, formatPp, formatRank } from "@/lib/format";
+import { getClan, getPlayerStats } from "@/lib/bancho/api";
+import { getClanInvites, getClanMembership, getClanRoster } from "@/lib/bancho/clans";
+import { getCurrentPlayer } from "@/lib/bancho/session";
+import { formatDate, formatNumber, formatPp, formatRank } from "@/lib/format";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -21,9 +22,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-/** Ranks come back from the v1 API as words; sort by seniority. */
-const RANK_ORDER: Record<string, number> = { Owner: 0, Officer: 1, Member: 2 };
-
 export default async function ClanPage({ params }: Props) {
   const { id } = await params;
   const clanId = Number.parseInt(id, 10);
@@ -32,8 +30,14 @@ export default async function ClanPage({ params }: Props) {
   const clan = await getClan(clanId);
   if (!clan) notFound();
 
-  const detail = await getClanWithMembers(clanId);
-  const members = detail?.members ?? [];
+  const [members, membership, viewer] = await Promise.all([
+    getClanRoster(clanId),
+    getClanMembership(clanId),
+    getCurrentPlayer(),
+  ]);
+
+  // only a clan's own officers may read its outstanding invites
+  const invites = membership?.can_invite ? await getClanInvites(clanId) : [];
 
   // each member's standing in vanilla osu!, which is the common yardstick
   const withStats = await Promise.all(
@@ -42,11 +46,6 @@ export default async function ClanPage({ params }: Props) {
       stats: await getPlayerStats(member.id, 0),
     })),
   );
-
-  withStats.sort((a, b) => {
-    const byRank = (RANK_ORDER[a.member.rank] ?? 9) - (RANK_ORDER[b.member.rank] ?? 9);
-    return byRank !== 0 ? byRank : (b.stats?.pp ?? 0) - (a.stats?.pp ?? 0);
-  });
 
   const totalPp = withStats.reduce((sum, entry) => sum + (entry.stats?.pp ?? 0), 0);
   const ranked = withStats.filter((entry) => entry.stats?.pp);
@@ -70,9 +69,15 @@ export default async function ClanPage({ params }: Props) {
             [{clan.tag}] · founded {formatDate(clan.created_at)}
           </p>
         </div>
+        {membership?.is_member ? (
+          <div className="flex flex-none flex-col items-end gap-1">
+            <span className="text-xs text-faint">Your rank</span>
+            <RankChip clanPriv={membership.clan_priv} />
+          </div>
+        ) : null}
       </header>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 [&>*]:min-w-0">
         <div className="panel px-4 py-3">
           <Stat label="Members" value={formatNumber(members.length)} />
         </div>
@@ -95,48 +100,18 @@ export default async function ClanPage({ params }: Props) {
             description="Restricted and unverified players are not listed."
           />
         ) : (
-          <ul className="divide-y divide-line/60">
-            {withStats.map(({ member, stats }) => (
-              <li key={member.id}>
-                <Link
-                  href={`/u/${member.id}`}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2"
-                >
-                  <Avatar playerId={member.id} name={member.name} size={38} />
-                  <CountryFlag country={member.country} />
-                  <div className="min-w-0 flex-1">
-                    <span className="truncate-flex block font-bold text-ink">{member.name}</span>
-                    <RankLabel rank={member.rank} />
-                  </div>
-                  {stats ? (
-                    <div className="flex flex-none items-center gap-4 text-right">
-                      <span className="hidden text-xs text-faint sm:block">
-                        {formatAccuracy(stats.acc)}
-                      </span>
-                      <div>
-                        <p className="font-mono text-sm font-extrabold text-pink">
-                          {formatPp(stats.pp)}
-                          <span className="ml-0.5 text-[11px] text-pink-lo">pp</span>
-                        </p>
-                        <p className="text-xs text-faint">{formatRank(stats.rank)}</p>
-                      </div>
-                    </div>
-                  ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ClanRoster
+            clan={clan}
+            membership={membership}
+            entries={withStats}
+            viewerId={viewer?.id ?? null}
+          />
         )}
       </Panel>
+
+      {membership && (membership.is_member || membership.can_disband) ? (
+        <ClanManagement clan={clan} membership={membership} invites={invites} />
+      ) : null}
     </div>
   );
-}
-
-function RankLabel({ rank }: { rank: ClanMember["rank"] }) {
-  const tones: Record<string, string> = {
-    Owner: "text-gold",
-    Officer: "text-sky",
-    Member: "text-faint",
-  };
-  return <span className={`text-xs font-bold ${tones[rank] ?? "text-faint"}`}>{rank}</span>;
 }

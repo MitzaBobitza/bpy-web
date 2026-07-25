@@ -92,12 +92,15 @@ export default function FaqPage() {
               q: "How do clans work?",
               a: (
                 <p>
-                  Clans are created and managed in game. Use <Code>!clan create</Code> to start one,
-                  then <Code>!clan invite</Code> to add players. They show up under{" "}
+                  A clan gives its members a shared tag in front of their name. Found one
+                  under{" "}
                   <Link href="/clans" className="font-bold">
                     Clans
                   </Link>
-                  .
+                  , then invite players by username — they join once they accept. Owners
+                  and officers run the clan from that page, or in game with{" "}
+                  <Code>!clan</Code>. Players who have never logged in to the game cannot
+                  be invited yet.
                 </p>
               ),
             },

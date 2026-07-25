@@ -17,6 +17,11 @@ const MENU_LINKS = [
   { href: () => "/settings", label: "Settings" },
 ];
 
+/** Members go straight to their clan; everyone else to the listing. */
+function clanHref(player: Player): string {
+  return player.clan_id ? `/clans/${player.clan_id}` : "/clans";
+}
+
 export function UserMenu({ player }: { player: Player }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -103,6 +108,14 @@ export function UserMenu({ player }: { player: Player }) {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href={clanHref(player)}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2 text-sm font-semibold text-dim transition hover:bg-surface-3 hover:text-ink"
+            >
+              {player.clan_id ? "My clan" : "Clans"}
+            </Link>
           </nav>
           <div className="border-t border-line p-1">
             <button

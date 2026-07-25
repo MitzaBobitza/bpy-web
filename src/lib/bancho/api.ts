@@ -4,7 +4,6 @@ import { apiGet, apiGetPage, query, upstreamFetch } from "./server";
 import type {
   BeatmapRecord,
   Clan,
-  ClanWithMembers,
   LeaderboardEntry,
   Mappool,
   MapRating,
@@ -278,11 +277,6 @@ async function v1Get<T>(path: string): Promise<T | null> {
   } catch {
     return null;
   }
-}
-
-/** Clan membership, which only the v1 API exposes. */
-export async function getClanWithMembers(clanId: number): Promise<ClanWithMembers | null> {
-  return v1Get<ClanWithMembers>(`/v1/get_clan${query({ id: clanId })}`);
 }
 
 // ── multiplayer & tournaments (v1 only) ──────────────────────────────────
