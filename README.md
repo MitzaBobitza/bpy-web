@@ -124,11 +124,12 @@ gated on clan rank, and the server enforces the same boundaries.
 | Rank | What it can do |
 |---|---|
 | Member | Leave the clan |
-| Officer | Invite players, withdraw invites, remove ordinary members |
-| Owner | Everything, plus promote and demote, rename and re-tag, transfer, disband |
+| Officer | Everything a member can, plus invite players, withdraw invites and remove ordinary members |
+| Owner | Everything an officer can, plus promote and demote, rename and re-tag, transfer and disband |
 
 Server staff can additionally disband any clan, which is what
-`!clan disband <tag>` allows in game.
+`!clan disband <tag>` allows in game. Restricted players cannot manage a clan
+from here, the same as `!clan` refusing them in game.
 
 Joining works by invitation: an officer invites by username, and the invite
 waits on `/clans` until the player accepts or declines. Accepting one turns
