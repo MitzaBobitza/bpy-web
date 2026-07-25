@@ -128,6 +128,17 @@ export function isRestricted(priv: number): boolean {
   return !(priv & PRIVILEGES.UNRESTRICTED);
 }
 
+/**
+ * Whether a player has ever logged in to the game.
+ *
+ * Registering on the website does not set this, and an unverified account is
+ * hidden everywhere until its first in-game login, so staff pages label it
+ * rather than leaving the absence unexplained.
+ */
+export function isVerified(priv: number): boolean {
+  return Boolean(priv & PRIVILEGES.VERIFIED);
+}
+
 /** Clan ranks (`ClanPrivileges`): 1 member, 2 officer, 3 owner. */
 export const CLAN_RANKS: Record<number, string> = {
   1: "Member",

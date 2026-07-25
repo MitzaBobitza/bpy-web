@@ -478,3 +478,105 @@ test.describe("staff area layout", () => {
     expect(overflowing).toEqual([]);
   });
 });
+
+test.describe("clan administration", () => {
+  /** Found a clan as a fresh player, returning its id and name. */
+  async function foundClan(page: Page): Promise<{ id: number; name: string }> {
+    const account = await register(page);
+    await signIn(page, OWNER.username, OWNER.password);
+    await grantRoles(page, account.id, ["Verified"]);
+    await signOut(page);
+
+    await signIn(page, account.username, PASSWORD);
+    const name = uniqueName().slice(0, 12);
+    await page.goto("/clans");
+    const form = card(page, "Found a clan");
+    await form.getByLabel("Name").fill(name);
+    await form
+      .getByLabel("Tag")
+      .fill(`T${Math.floor(Math.random() * 90000 + 10000)}`);
+    await form.getByRole("button", { name: "Create clan" }).click();
+    await page.waitForURL(/\/clans\/\d+/, { timeout: 20_000 });
+
+    const id = Number.parseInt(page.url().split("/clans/")[1], 10);
+    await signOut(page);
+    return { id, name };
+  }
+
+  test("a clan can be found by tag and opened", async ({ page }) => {
+    const clan = await foundClan(page);
+
+    await signIn(page, OWNER.username, OWNER.password);
+    await page.goto(`/admin/clans?q=${clan.name}`);
+
+    await expect(page.getByRole("link", { name: new RegExp(clan.name) })).toBeVisible();
+
+    await page.goto(`/admin/clans/${clan.id}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(clan.name);
+    await expect(page.getByText("1 members")).toBeVisible();
+  });
+
+  test("staff can rename a clan rather than disbanding it", async ({ page }) => {
+    const clan = await foundClan(page);
+    const renamed = uniqueName().slice(0, 12);
+
+    await signIn(page, OWNER.username, OWNER.password);
+    await page.goto(`/admin/clans/${clan.id}`);
+
+    const settings = card(page, "Name and tag");
+    await settings.getByLabel("Name").fill(renamed);
+    await settings.getByRole("button", { name: "Save changes" }).click();
+    await expect(page.getByText("Clan renamed.")).toBeVisible({ timeout: 15_000 });
+
+    // and it is recorded, so another staff member can see who did it
+    await page.goto("/admin/audit?action=clan_rename");
+    await expect(page.getByText("Clan renamed").first()).toBeVisible();
+  });
+
+  test("staff can hand a clan on to another member", async ({ page }) => {
+    const clan = await foundClan(page);
+    const heir = await register(page);
+
+    // put the heir in the clan through the owner, then act as staff
+    await signIn(page, OWNER.username, OWNER.password);
+    await grantRoles(page, heir.id, ["Verified"]);
+    await page.goto(`/admin/clans/${clan.id}`);
+
+    // the sole member is the owner, who has no controls
+    await expect(page.getByRole("button", { name: "Make owner" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(0);
+    await expect(page.getByText("Owner").first()).toBeVisible();
+  });
+
+  test("staff can disband any clan", async ({ page }) => {
+    const clan = await foundClan(page);
+
+    await signIn(page, OWNER.username, OWNER.password);
+    await page.goto(`/admin/clans/${clan.id}`);
+
+    await page.getByRole("button", { name: "Disband clan" }).click();
+    await page.getByRole("button", { name: "Yes, disband" }).click();
+    await page.waitForURL(/\/admin\/clans$/, { timeout: 20_000 });
+
+    const response = await page.goto(`/admin/clans/${clan.id}`);
+    expect(response?.status()).toBe(404);
+  });
+
+  test("the section is hidden from staff without a staff privilege", async ({
+    page,
+  }) => {
+    // a nominator holds no STAFF bit, so clans are not theirs to manage
+    const account = await register(page);
+    await signIn(page, OWNER.username, OWNER.password);
+    await grantRoles(page, account.id, ["Nominator"]);
+    await signOut(page);
+
+    await signIn(page, account.username, PASSWORD);
+    await page.goto("/admin");
+
+    // scoped to the panel: the site header carries its own Clans link
+    const sections = page.getByRole("navigation", { name: "Admin sections" });
+    await expect(sections.getByRole("link", { name: "Beatmaps" })).toBeVisible();
+    await expect(sections.getByRole("link", { name: "Clans" })).toHaveCount(0);
+  });
+});

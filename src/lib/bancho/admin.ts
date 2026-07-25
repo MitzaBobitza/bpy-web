@@ -3,6 +3,8 @@ import "server-only";
 import { apiGet, apiGetPage, query } from "./server";
 import type {
   AdminCapabilities,
+  AdminClanMember,
+  AdminClanSummary,
   AuditLogEntry,
   HardwareMatch,
   LoginRecord,
@@ -90,6 +92,31 @@ export async function getMapRequests(): Promise<MapRequestSummary[]> {
 
 export async function getMappools(): Promise<MappoolDetail[]> {
   const result = await apiGet<MappoolDetail[]>("/v2/admin/mappools", {
+    authenticated: true,
+  });
+  return result?.data ?? [];
+}
+
+export async function getAdminClans(
+  options: { search?: string; page?: number; pageSize?: number } = {},
+): Promise<Page<AdminClanSummary>> {
+  const { search, page = 1, pageSize = 25 } = options;
+  return apiGetPage<AdminClanSummary>(
+    `/v2/admin/clans${query({ search, page, page_size: pageSize })}`,
+    { authenticated: true },
+  );
+}
+
+export async function getAdminClan(clanId: number): Promise<AdminClanSummary | null> {
+  const result = await apiGet<AdminClanSummary>(`/v2/admin/clans/${clanId}`, {
+    authenticated: true,
+  });
+  return result?.data ?? null;
+}
+
+/** The full roster, hidden members included. */
+export async function getAdminClanMembers(clanId: number): Promise<AdminClanMember[]> {
+  const result = await apiGet<AdminClanMember[]>(`/v2/admin/clans/${clanId}/members`, {
     authenticated: true,
   });
   return result?.data ?? [];

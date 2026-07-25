@@ -20,6 +20,7 @@ export interface AdminCapabilities {
   view_nomination_queue: boolean;
   // tournament manager
   manage_mappools: boolean;
+  manage_clans: boolean;
   // developer
   manage_privileges: boolean;
   grant_donor: boolean;
@@ -136,3 +137,23 @@ export type AssignableMapStatus = "rank" | "unrank" | "love";
 
 /** Whether a status change covers one difficulty or the whole set. */
 export type MapStatusScope = "map" | "set";
+
+/** A clan as the staff listing sees it. */
+export type AdminClanSummary = {
+  id: number;
+  name: string;
+  tag: string;
+  owner_id: number;
+  owner_name: string | null;
+  member_count: number;
+  created_at: string;
+};
+
+/** A roster entry for staff, including members hidden from the public. */
+export type AdminClanMember = {
+  id: number;
+  name: string;
+  country: string;
+  priv: number;
+  clan_priv: number;
+};

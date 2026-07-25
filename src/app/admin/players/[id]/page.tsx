@@ -18,7 +18,7 @@ import type { HardwareMatch, LoginRecord } from "@/lib/bancho/admin-types";
 import { getCurrentPlayer } from "@/lib/bancho/session";
 import { formatDate, formatDateTime, formatNumber, formatRelative } from "@/lib/format";
 import { describeDuration } from "@/lib/osu/admin";
-import { privilegeLabels } from "@/lib/osu/privileges";
+import { clanRankLabel, privilegeLabels } from "@/lib/osu/privileges";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -102,6 +102,19 @@ export default async function AdminPlayerPage({ params }: Props) {
           <Fact label="Joined" value={formatDate(player.creation_time)} />
           <Fact label="Last seen" value={formatRelative(player.latest_activity)} />
           <Fact label="Game logins" value={formatNumber(player.login_count)} />
+          {player.clan_id ? (
+            <div>
+              <dt className="text-faint">Clan</dt>
+              <dd className="font-bold text-ink">
+                <Link
+                  href={`/admin/clans/${player.clan_id}`}
+                  className="transition hover:text-pink"
+                >
+                  {clanRankLabel(player.clan_priv)} of clan #{player.clan_id}
+                </Link>
+              </dd>
+            </div>
+          ) : null}
         </dl>
       </Panel>
 

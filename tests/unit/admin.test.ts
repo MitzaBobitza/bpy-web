@@ -28,6 +28,7 @@ function capabilities(overrides: Partial<AdminCapabilities> = {}): AdminCapabili
     manage_map_status: false,
     view_nomination_queue: false,
     manage_mappools: false,
+    manage_clans: false,
     manage_privileges: false,
     grant_donor: false,
     wipe_map_scores: false,
@@ -232,5 +233,41 @@ describe("privilege labels", () => {
 
   it("is empty for an account with nothing", () => {
     expect(privilegeLabels(0)).toEqual([]);
+  });
+});
+
+describe("clan administration", () => {
+  it("is offered to every staff privilege, as !clan disband is", () => {
+    const sections = allowedSections(capabilities({ manage_clans: true })).map(
+      (section) => section.label,
+    );
+    expect(sections).toEqual(["Clans"]);
+  });
+
+  it("is not offered to a nominator or tournament manager", () => {
+    // neither holds a STAFF bit, so neither may act on a clan
+    expect(
+      allowedSections(capabilities({ manage_map_status: true })).map((s) => s.label),
+    ).not.toContain("Clans");
+    expect(
+      allowedSections(capabilities({ manage_mappools: true })).map((s) => s.label),
+    ).not.toContain("Clans");
+  });
+
+  it("names the actions a staff clan change writes to the audit log", () => {
+    for (const action of [
+      "clan_disband",
+      "clan_rename",
+      "clan_transfer",
+      "clan_kick",
+    ]) {
+      expect(auditAction(action).label).not.toBe(action);
+    }
+  });
+
+  it("tones dissolving a clan more severely than renaming one", () => {
+    expect(auditAction("clan_disband").tone).toBe("bad");
+    expect(auditAction("clan_rename").tone).toBe("warn");
+    expect(auditAction("clan_transfer").tone).toBe("neutral");
   });
 });

@@ -155,6 +155,10 @@ export const AUDIT_ACTIONS: Record<string, { label: string; tone: "neutral" | "w
   priv_grant: { label: "Privileges granted", tone: "neutral" },
   priv_revoke: { label: "Privileges revoked", tone: "warn" },
   donor_grant: { label: "Donator granted", tone: "good" },
+  clan_disband: { label: "Clan disbanded", tone: "bad" },
+  clan_rename: { label: "Clan renamed", tone: "warn" },
+  clan_transfer: { label: "Clan transferred", tone: "neutral" },
+  clan_kick: { label: "Removed from clan", tone: "warn" },
 };
 
 export function auditAction(action: string): {
@@ -194,6 +198,12 @@ export const ADMIN_SECTIONS: {
     label: "Mappools",
     description: "Build tournament pools",
     capability: "manage_mappools",
+  },
+  {
+    href: "/admin/clans",
+    label: "Clans",
+    description: "Rename, hand on or dissolve a clan",
+    capability: "manage_clans",
   },
   {
     href: "/admin/announcements",

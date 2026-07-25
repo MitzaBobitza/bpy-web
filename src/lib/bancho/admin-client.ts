@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  AdminClanSummary,
   AssignableMapStatus,
   MappoolDetail,
   MapStatusChange,
@@ -160,4 +161,39 @@ export function removeMappoolMap(
     `/v2/admin/mappools/${poolId}/maps?mods=${mods}&slot=${slot}`,
     { method: "DELETE" },
   );
+}
+
+// ── clans ────────────────────────────────────────────────────────────────
+
+export function renameClanAsStaff(
+  clanId: number,
+  changes: { name?: string; tag?: string },
+): Promise<AdminClanSummary> {
+  return apiRequest<AdminClanSummary>(`/v2/admin/clans/${clanId}`, {
+    method: "PATCH",
+    json: changes,
+  });
+}
+
+export function assignClanOwner(
+  clanId: number,
+  userId: number,
+): Promise<AdminClanSummary> {
+  return apiRequest<AdminClanSummary>(`/v2/admin/clans/${clanId}/owner`, {
+    method: "PUT",
+    json: { user_id: userId },
+  });
+}
+
+export function removeClanMemberAsStaff(
+  clanId: number,
+  userId: number,
+): Promise<void> {
+  return apiRequest<void>(`/v2/admin/clans/${clanId}/members/${userId}`, {
+    method: "DELETE",
+  });
+}
+
+export function disbandClanAsStaff(clanId: number): Promise<void> {
+  return apiRequest<void>(`/v2/admin/clans/${clanId}`, { method: "DELETE" });
 }
