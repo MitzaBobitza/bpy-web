@@ -42,7 +42,10 @@ export function ClanManagement({
         <p className="eyebrow">Manage</p>
         <p className="mt-1 text-xs text-faint">
           The same actions as the in-game <code className="text-dim">!clan</code>{" "}
-          commands. Promoting and removing members is done from the list above.
+          commands.
+          {membership.can_kick || membership.can_manage_ranks
+            ? " Promoting and removing members is done from the list above."
+            : null}
         </p>
       </div>
 
