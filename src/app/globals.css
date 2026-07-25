@@ -1,26 +1,279 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+  Design tokens.
+
+  The palette is taken from osu!'s own interface: a desaturated plum-black
+  set of surfaces with the signature #ff66ab pink carrying every accent,
+  plus the fixed colours osu! assigns to grades, ranked statuses and the
+  difficulty spectrum.
+*/
+@theme {
+  --color-void: #0d090b;
+  --color-base: #171016;
+  --color-surface: #221822;
+  --color-surface-2: #2b2029;
+  --color-surface-3: #342631;
+  --color-line: #3d2d38;
+  --color-line-bright: #523d4b;
+
+  --color-pink: #ff66ab;
+  --color-pink-hi: #ff8fc1;
+  --color-pink-lo: #d14d88;
+  --color-pink-dim: #7a3557;
+
+  --color-ink: #f7eef4;
+  --color-dim: #bfaab8;
+  --color-faint: #8a7480;
+
+  --color-gold: #ffcc22;
+  --color-silver: #cfd9e3;
+  --color-lime: #88da20;
+  --color-sky: #4fa3f7;
+  --color-violet: #a78bfa;
+  --color-coral: #ff5a5a;
+  --color-mint: #5ed99a;
+  --color-tangerine: #ff7b53;
+
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-data), ui-monospace, monospace;
+
+  --radius-panel: 8px;
+
+  /* the approach-circle timing used by the hero and the loading spinner */
+  --animate-approach: approach 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-hit-pulse: hit-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-live: live 2s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes approach {
+  0% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.55;
+  }
+  92% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes hit-pulse {
+  0%,
+  88% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  94% {
+    transform: scale(1.06);
+    filter: brightness(1.35);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes live {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(94 217 154 / 0.55);
+  }
+  50% {
+    opacity: 0.75;
+    box-shadow: 0 0 0 5px rgb(94 217 154 / 0);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── base ─────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scrollbar-color: var(--color-line-bright) transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Nunito's numerals line up in tables when tabular */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+    A quiet ambient wash behind the whole page: two pink pools that keep
+    the flat surfaces from reading as pure grey.
+  */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60rem 40rem at 15% -10%, rgb(255 102 171 / 0.09), transparent 70%),
+      radial-gradient(50rem 36rem at 85% 0%, rgb(167 139 250 / 0.06), transparent 70%),
+      var(--color-base);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: rgb(255 102 171 / 0.32);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-pink);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-bright);
+    border-radius: 999px;
+    border: 2px solid var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-pink-dim);
+  }
+}
+
+/* ── components ───────────────────────────────────────────────────────── */
+
+@layer components {
+  /* The card surface everything sits on. */
+  .panel {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-panel);
+  }
+
+  .panel-inset {
+    background-color: var(--color-void);
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+  }
+
+  /*
+    Section label: a small hit-circle sits in place of a bullet, which ties
+    the page structure back to the game.
+  */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    border: 2px solid var(--color-pink);
+    background-color: rgb(255 102 171 / 0.25);
+    flex: none;
+  }
+
+  /* Diagonal hatching, as osu! uses to mark unranked material. */
+  .hatched {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgb(255 255 255 / 0.03) 0 6px,
+      transparent 6px 12px
+    );
+  }
+
+  /* Long userpage / description text. */
+  .prose-osu {
+    line-height: 1.7;
+    color: var(--color-dim);
+  }
+  .prose-osu a {
+    color: var(--color-pink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose-osu strong {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+}
+
+/* ── utilities ────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Clip long map titles to a single line without breaking flex layouts. */
+  .truncate-flex {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 9s linear infinite;
+  }
+
+  .text-shadow-hero {
+    text-shadow: 0 2px 24px rgb(0 0 0 / 0.75);
+  }
+}
+
+/* Honour the visitor's motion preference: the ambient game-like motion is
+   decorative, so it stops entirely. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

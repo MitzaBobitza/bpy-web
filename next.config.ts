@@ -1,7 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /**
+   * The dev server blocks requests for its own dev resources when they come
+   * from an origin it does not recognise, which silently prevents hydration
+   * — the page renders but nothing is interactive. Reaching the app by IP
+   * rather than by name is normal under WSL, in containers, and when
+   * testing from another device on the network, so those hosts are allowed.
+   *
+   * This has no effect on production builds.
+   */
+  allowedDevOrigins: ["127.0.0.1", "localhost", "0.0.0.0"],
+
+  poweredByHeader: false,
+
+  async redirects() {
+    return [
+      // osu! links profiles as /users/{id}; keep those working
+      { source: "/users/:id", destination: "/u/:id", permanent: true },
+      { source: "/u", destination: "/search", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
