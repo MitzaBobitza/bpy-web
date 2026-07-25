@@ -4,6 +4,12 @@ This adds the website to a **bancho.py server that is already running**, set up
 with the [official guide](https://github.com/osuAkatsuki/bancho.py/wiki/Setting-up)
 — Docker for the app, nginx installed via `./scripts/install-nginx-config.sh`.
 
+> **For the staff area**, clone
+> [this fork of bancho.py](https://github.com/MitzaBobitza/bancho.py) in place of
+> upstream. It adds the `/v2/admin` endpoints the panel needs and is otherwise
+> the same server, so every other step below is unchanged. Against upstream the
+> site works normally and `/admin` returns 404.
+
 Nothing here changes how bancho.py itself is installed or run. It leaves
 `bancho.conf` untouched, so re-running `install-nginx-config.sh` later will not
 undo any of it.
@@ -37,6 +43,19 @@ curl -H "Host: api.example.com" http://127.0.0.1:10000/v2/server/stats
 You want `{"status":"success","data":{"online_players":0,...}}`. If you get
 `{"detail":"Not Found"}`, the `Host` header does not match your `DOMAIN` —
 bancho.py routes its entire API on `api.{DOMAIN}` and 404s anything else.
+
+> **Your database must run in UTC.** bancho.py stores score and audit
+> timestamps as naive datetimes in whatever timezone the database is set to,
+> and the website reads them as UTC. The official setup is already correct —
+> the `mysql` container defaults to UTC — but if you run your own MySQL, check
+> it:
+>
+> ```bash
+> mysql -e "SELECT NOW(), UTC_TIMESTAMP()"
+> ```
+>
+> If those differ, every time shown on the site will be off by that much.
+> Start MySQL with `--default-time-zone=+00:00`.
 
 ---
 

@@ -19,7 +19,13 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(
+/**
+ * Perform a request against the proxy and unwrap the response envelope.
+ *
+ * Exported so the admin actions in `admin-client.ts` share exactly this
+ * error handling.
+ */
+export async function apiRequest<T>(
   path: string,
   init: RequestInit & { json?: unknown } = {},
 ): Promise<T> {
@@ -63,11 +69,11 @@ async function request<T>(
 // ── sessions ─────────────────────────────────────────────────────────────
 
 export function login(username: string, password: string): Promise<Player> {
-  return request<Player>("/v2/sessions", { method: "POST", json: { username, password } });
+  return apiRequest<Player>("/v2/sessions", { method: "POST", json: { username, password } });
 }
 
 export function logout(): Promise<void> {
-  return request<void>("/v2/sessions/current", { method: "DELETE" });
+  return apiRequest<void>("/v2/sessions/current", { method: "DELETE" });
 }
 
 export function register(args: {
@@ -76,7 +82,7 @@ export function register(args: {
   password: string;
   captchaToken?: string;
 }): Promise<Player> {
-  return request<Player>("/v2/accounts", {
+  return apiRequest<Player>("/v2/accounts", {
     method: "POST",
     json: {
       username: args.username,
@@ -98,7 +104,7 @@ export function updateProfile(
     userpage_content?: string | null;
   },
 ): Promise<Player> {
-  return request<Player>(`/v2/players/${playerId}`, { method: "PATCH", json: changes });
+  return apiRequest<Player>(`/v2/players/${playerId}`, { method: "PATCH", json: changes });
 }
 
 export function changePassword(
@@ -106,7 +112,7 @@ export function changePassword(
   currentPassword: string,
   newPassword: string,
 ): Promise<void> {
-  return request<void>(`/v2/players/${playerId}/password`, {
+  return apiRequest<void>(`/v2/players/${playerId}/password`, {
     method: "PUT",
     json: { current_password: currentPassword, new_password: newPassword },
   });
@@ -115,33 +121,33 @@ export function changePassword(
 export function uploadAvatar(playerId: number, file: File): Promise<void> {
   const form = new FormData();
   form.append("avatar_file", file);
-  return request<void>(`/v2/players/${playerId}/avatar`, { method: "PUT", body: form });
+  return apiRequest<void>(`/v2/players/${playerId}/avatar`, { method: "PUT", body: form });
 }
 
 // ── social ───────────────────────────────────────────────────────────────
 
 export function addFriend(playerId: number, targetId: number): Promise<void> {
-  return request<void>(`/v2/players/${playerId}/friends/${targetId}`, { method: "PUT" });
+  return apiRequest<void>(`/v2/players/${playerId}/friends/${targetId}`, { method: "PUT" });
 }
 
 export function removeFriend(playerId: number, targetId: number): Promise<void> {
-  return request<void>(`/v2/players/${playerId}/friends/${targetId}`, { method: "DELETE" });
+  return apiRequest<void>(`/v2/players/${playerId}/friends/${targetId}`, { method: "DELETE" });
 }
 
 export function addFavourite(playerId: number, setId: number): Promise<void> {
-  return request<void>(`/v2/players/${playerId}/favourites/${setId}`, { method: "PUT" });
+  return apiRequest<void>(`/v2/players/${playerId}/favourites/${setId}`, { method: "PUT" });
 }
 
 export function removeFavourite(playerId: number, setId: number): Promise<void> {
-  return request<void>(`/v2/players/${playerId}/favourites/${setId}`, { method: "DELETE" });
+  return apiRequest<void>(`/v2/players/${playerId}/favourites/${setId}`, { method: "DELETE" });
 }
 
 // ── reads used for live updates ──────────────────────────────────────────
 
 export function fetchServerStats(): Promise<ServerStats> {
-  return request<ServerStats>("/v2/server/stats");
+  return apiRequest<ServerStats>("/v2/server/stats");
 }
 
 export function searchPlayers(q: string): Promise<SearchPlayer[]> {
-  return request<SearchPlayer[]>(`/v2/players/search?q=${encodeURIComponent(q)}`);
+  return apiRequest<SearchPlayer[]>(`/v2/players/search?q=${encodeURIComponent(q)}`);
 }

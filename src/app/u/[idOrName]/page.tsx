@@ -40,7 +40,12 @@ import {
   isStillActive,
 } from "@/lib/format";
 import { MODE_LIST, modeInfo, toMode } from "@/lib/osu/gamemodes";
-import { actionLabel, clanRankLabel, playStyleLabels } from "@/lib/osu/privileges";
+import {
+  actionLabel,
+  clanRankLabel,
+  hasStaffAccess,
+  playStyleLabels,
+} from "@/lib/osu/privileges";
 
 type Props = {
   params: Promise<{ idOrName: string }>;
@@ -106,6 +111,16 @@ export default async function ProfilePage({ params, searchParams }: Props) {
               className="rounded-md border border-line-bright bg-surface-3 px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-line-bright"
             >
               Edit profile
+            </Link>
+          ) : null
+        }
+        staffAction={
+          viewer && hasStaffAccess(viewer.priv) ? (
+            <Link
+              href={`/admin/players/${player.id}`}
+              className="rounded-md border border-violet/40 bg-violet/10 px-3 py-1.5 text-xs font-bold text-violet transition hover:bg-violet/20"
+            >
+              Manage
             </Link>
           ) : null
         }
@@ -198,11 +213,13 @@ function ProfileHeader({
   clanName,
   status,
   action,
+  staffAction,
 }: {
   player: Awaited<ReturnType<typeof getPlayer>> & object;
   clanName: string | null;
   status: Awaited<ReturnType<typeof getPlayerStatus>>;
   action: React.ReactNode;
+  staffAction: React.ReactNode;
 }) {
   const hue = (player.id * 47) % 360;
 
@@ -263,7 +280,10 @@ function ProfileHeader({
             </div>
           </div>
 
-          <div className="pb-1">{action}</div>
+          <div className="flex flex-wrap items-center gap-2 pb-1">
+            {staffAction}
+            {action}
+          </div>
         </div>
       </div>
     </header>

@@ -5,15 +5,26 @@ import { useState } from "react";
 
 import { Button, Input } from "@/components/ui/primitives";
 
-/** Search box on the dedicated search page. Submits to a shareable URL. */
-export function SearchInput({ initialTerm }: { initialTerm: string }) {
+/**
+ * Player search box. Submits to a shareable URL, so a search can be linked
+ * or reloaded. `basePath` lets the staff area reuse it against its own page.
+ */
+export function SearchInput({
+  initialTerm,
+  basePath = "/search",
+  placeholder = "Username",
+}: {
+  initialTerm: string;
+  basePath?: string;
+  placeholder?: string;
+}) {
   const router = useRouter();
   const [term, setTerm] = useState(initialTerm);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const query = term.trim();
-    router.push(query ? `/search?q=${encodeURIComponent(query)}` : "/search");
+    router.push(query ? `${basePath}?q=${encodeURIComponent(query)}` : basePath);
   }
 
   return (
@@ -26,7 +37,7 @@ export function SearchInput({ initialTerm }: { initialTerm: string }) {
         type="search"
         value={term}
         onChange={(event) => setTerm(event.target.value)}
-        placeholder="Username"
+        placeholder={placeholder}
         autoFocus
         className="flex-1"
       />

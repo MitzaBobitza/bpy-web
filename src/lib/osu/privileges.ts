@@ -179,3 +179,44 @@ export const PLAY_STYLES: [number, string][] = [
 export function playStyleLabels(playStyle: number): string[] {
   return PLAY_STYLES.filter(([bit]) => playStyle & bit).map(([, label]) => label);
 }
+
+/**
+ * Every privilege bit with a readable label, in escalating order. Used to
+ * show exactly what an account holds, which matters in the staff area where
+ * privileges are granted individually.
+ */
+export const PRIVILEGE_LABELS: [number, string][] = [
+  [PRIVILEGES.UNRESTRICTED, "Unrestricted"],
+  [PRIVILEGES.VERIFIED, "Verified"],
+  [PRIVILEGES.WHITELISTED, "Whitelisted"],
+  [PRIVILEGES.SUPPORTER, "Supporter"],
+  [PRIVILEGES.PREMIUM, "Premium"],
+  [PRIVILEGES.ALUMNI, "Alumni"],
+  [PRIVILEGES.TOURNEY_MANAGER, "Tournament staff"],
+  [PRIVILEGES.NOMINATOR, "Nominator"],
+  [PRIVILEGES.MODERATOR, "Moderator"],
+  [PRIVILEGES.ADMINISTRATOR, "Administrator"],
+  [PRIVILEGES.DEVELOPER, "Developer"],
+];
+
+export function privilegeLabels(priv: number): string[] {
+  return PRIVILEGE_LABELS.filter(([bit]) => priv & bit).map(([, label]) => label);
+}
+
+/**
+ * Whether an account may open the staff area at all.
+ *
+ * Broader than `isStaff`: nominators and tournament managers are not
+ * moderators, but each has a section of the panel. Matches the `is_staff`
+ * field bancho.py returns from /v2/admin/capabilities.
+ */
+export function hasStaffAccess(priv: number): boolean {
+  return Boolean(
+    priv &
+      (PRIVILEGES.MODERATOR |
+        PRIVILEGES.ADMINISTRATOR |
+        PRIVILEGES.DEVELOPER |
+        PRIVILEGES.NOMINATOR |
+        PRIVILEGES.TOURNEY_MANAGER),
+  );
+}

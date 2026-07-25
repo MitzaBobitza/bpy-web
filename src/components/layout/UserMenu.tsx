@@ -8,6 +8,7 @@ import { Avatar } from "@/components/osu/Avatar";
 import { RoleBadgeRow } from "@/components/osu/badges";
 import { logout } from "@/lib/bancho/client";
 import type { Player } from "@/lib/bancho/types";
+import { hasStaffAccess } from "@/lib/osu/privileges";
 
 const MENU_LINKS = [
   { href: (id: number) => `/u/${id}`, label: "My profile" },
@@ -81,6 +82,16 @@ export function UserMenu({ player }: { player: Player }) {
             <RoleBadgeRow priv={player.priv} className="mt-1" />
           </div>
           <nav className="py-1">
+            {hasStaffAccess(player.priv) ? (
+              <Link
+                href="/admin"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-sm font-bold text-violet transition hover:bg-surface-3"
+              >
+                Staff area
+              </Link>
+            ) : null}
             {MENU_LINKS.map((link) => (
               <Link
                 key={link.label}

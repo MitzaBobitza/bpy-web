@@ -27,6 +27,7 @@ every page reads from bancho.py's HTTP API.
 | **Accounts** | Registration with optional captcha, sign-in, sign-out, avatar upload, username / country / default mode / userpage editing, password change |
 | **Social** | Friends list, add and remove friends, favourite beatmaps |
 | **Help** | How to connect, rules, FAQ, terms of service, privacy policy |
+| **Staff area** | Player moderation, privileges, beatmap nominations, mappools, announcements and maintenance — see below |
 
 ## How it talks to bancho.py
 
@@ -114,19 +115,51 @@ Every setting is in `.env.example`, with notes. Two are worth calling out:
   `NEXT_PUBLIC_CAPTCHA_PROVIDER` and `NEXT_PUBLIC_CAPTCHA_SITEKEY`. Leave all
   four empty to disable it.
 
+## The staff area
+
+`/admin` is privilege-aware: each section and control appears only for staff who
+hold the privilege it needs, and the server enforces the same boundaries, so a
+hidden control is unreachable rather than merely invisible. Players without any
+staff privilege get a 404 rather than a refusal.
+
+| Section | Privilege | What it covers |
+|---|---|---|
+| Players | Moderator | Account state, notes, silences, and the moderation history |
+| | Administrator | Restrictions, notifications, login history, hardware matches |
+| | Developer | Privilege grants and revocations, donator grants |
+| Audit log | Moderator | Every staff action, filterable by action and period |
+| Beatmaps | Nominator | The nomination queue, and ranked status by map or set |
+| Mappools | Tournament staff | Building tournament pools, pick by pick |
+| Announcements | Administrator | Notifying everyone, or one connected player |
+| Maintenance | Developer | Score wipes |
+
+This needs the `/v2/admin` endpoints, which are part of
+[this fork of bancho.py](https://github.com/MitzaBobitza/bancho.py) rather than
+upstream. Against an upstream server the rest of the site works normally and the
+staff area 404s.
+
+Every action mirrors an in-game chat command and goes through the same code, so
+the audit log reads the same whichever surface was used, and privileges behave
+identically — they are independent bits with no hierarchy, so a developer
+without the administrator bit cannot restrict, exactly as `!restrict` behaves.
+
+A few developer commands are deliberately absent, and the Maintenance page says
+so: recalculating pp is a batch job bancho.py ships a script for, shutting the
+server down belongs to systemd or Docker, and module reloads, console debug,
+stealth mode and forcing a player into a match only mean anything inside the
+running game process.
+
 ## What bancho.py does not expose
 
 A few things are absent because the API has no endpoint for them, not by choice:
 
-- **No staff or moderation tools.** There is no admin API — restrictions,
-  silences and map status changes are done in game with bancho.py's chat
-  commands.
 - **No rank history graphs.** Only current ranks are stored, so there is no
   historical series to plot. Profiles chart the pp of a player's top plays
   instead, which is real data.
-- **Mappools need their creator online.** bancho.py resolves a pool's creator
-  from its in-memory session list, so a pool is only readable while that player
-  is connected.
+- **The public tournaments page needs a pool's creator online.** The v1
+  endpoint it reads resolves the creator from bancho.py's in-memory session
+  list. The staff area does not have this problem — its own endpoint reads
+  pools from the database.
 - **No server-wide "recent scores" feed.** The global score listing is
   unordered, so the home page draws its latest-plays strip from the players at
   the top of the leaderboard, whose score lists *are* ordered.
