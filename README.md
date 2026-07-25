@@ -116,6 +116,23 @@ Every setting is in `.env.example`, with notes. Two are worth calling out:
   `NEXT_PUBLIC_CAPTCHA_PROVIDER` and `NEXT_PUBLIC_CAPTCHA_SITEKEY`. Leave all
   four empty to disable it.
 
+## Country flags
+
+Wherever a player appears — rankings, profiles, score rows, clan rosters,
+search and the staff area — their country shows as its flag, and as its name
+for anyone using a screen reader.
+
+The images are SVGs in `public/flags`, vendored from
+[flag-icons](https://github.com/lipis/flag-icons) (MIT, see
+`public/flags/LICENSE`) rather than loaded from a CDN, so the site draws them
+without reaching an external host. Emoji flags would have been simpler and are
+the wrong answer: Windows renders them as bare letters, and that is most of
+the audience.
+
+bancho.py stores `xx` when it cannot place a player, and that has no flag by
+definition — those fall back to a code chip. A unit test keeps the directory
+and the country list in step, so nothing can render as a broken image.
+
 ## Link previews
 
 Posting a link in Discord, Slack, Twitter or iMessage unfurls it into a card

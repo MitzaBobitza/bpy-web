@@ -265,3 +265,21 @@ export const COUNTRY_OPTIONS: { code: string; name: string }[] = Object.entries(
   .filter(([code]) => code !== "xx")
   .map(([code, name]) => ({ code, name }))
   .sort((a, b) => a.name.localeCompare(b.name));
+
+/**
+ * Whether a flag image exists for a country code.
+ *
+ * `public/flags` holds one svg per code in `COUNTRIES`, except bancho.py's
+ * "xx" placeholder, which has no flag by definition. A `countries-flags`
+ * test keeps the directory and this list in step, so nothing renders as a
+ * broken image.
+ */
+export function hasFlag(code: string): boolean {
+  const key = code?.toLowerCase();
+  return key !== "xx" && key in COUNTRIES;
+}
+
+/** Where a country's flag is served from. */
+export function flagUrl(code: string): string {
+  return `/flags/${code.toLowerCase()}.svg`;
+}

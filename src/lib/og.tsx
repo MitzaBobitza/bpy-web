@@ -217,6 +217,28 @@ export function OgStat({
 }
 
 /**
+ * A country's flag, read off disk and inlined.
+ *
+ * satori cannot fetch, and these are the same files the site serves from
+ * `public/flags`, so there is one source of truth for what a flag looks
+ * like. Returns null for a country with no flag, so callers can fall back
+ * to the code.
+ */
+export async function inlineFlag(country: string): Promise<string | null> {
+  const code = (country || "").toLowerCase();
+  if (!/^[a-z]{2}$/.test(code) || code === "xx") return null;
+
+  try {
+    const svg = await readFile(
+      path.join(process.cwd(), "public/flags", `${code}.svg`),
+    );
+    return `data:image/svg+xml;base64,${svg.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * A star, for difficulty ratings.
  *
  * Drawn as an inline svg rather than the ★ character: the vendored Nunito

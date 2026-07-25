@@ -56,6 +56,14 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // a country's flag never changes, and a ranking page asks for
+        // dozens of them, so let the browser keep them
+        source: "/flags/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
     ];
   },
 };

@@ -5,6 +5,7 @@ import { avatarUrl, config } from "@/lib/config";
 import { formatAccuracy, formatNumber, formatPp } from "@/lib/format";
 import { modeInfo } from "@/lib/osu/gamemodes";
 import {
+  inlineFlag,
   inlineImage,
   og,
   OG_CONTENT_TYPE,
@@ -55,9 +56,10 @@ export default async function Image({
   }
 
   const mode = player.preferred_mode ?? 0;
-  const [stats, avatar] = await Promise.all([
+  const [stats, avatar, flag] = await Promise.all([
     getPlayerStats(player.id, mode).catch(() => null),
     inlineImage(avatarUrl(player.id)),
+    inlineFlag(player.country),
   ]);
 
   return new ImageResponse(
@@ -118,21 +120,36 @@ export default async function Image({
                 {truncate(player.name, 18)}
               </div>
               <div style={{ display: "flex", alignItems: "center", marginTop: 10 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    marginRight: 14,
-                    padding: "6px 14px",
-                    borderRadius: 8,
-                    backgroundColor: og.surface,
-                    fontSize: 24,
-                    fontWeight: 800,
-                    letterSpacing: 2,
-                    color: og.dim,
-                  }}
-                >
-                  {(player.country || "??").toUpperCase()}
-                </div>
+                {flag ? (
+                  <img
+                    src={flag}
+                    width={44}
+                    height={33}
+                    style={{
+                      width: 44,
+                      height: 33,
+                      marginRight: 14,
+                      borderRadius: 4,
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      marginRight: 14,
+                      padding: "6px 14px",
+                      borderRadius: 8,
+                      backgroundColor: og.surface,
+                      fontSize: 24,
+                      fontWeight: 800,
+                      letterSpacing: 2,
+                      color: og.dim,
+                    }}
+                  >
+                    {(player.country || "??").toUpperCase()}
+                  </div>
+                )}
                 <div style={{ display: "flex", fontSize: 28, color: og.faint }}>
                   {modeInfo(mode).fullName}
                 </div>

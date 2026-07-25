@@ -158,3 +158,42 @@ test.describe("public pages", () => {
     }
   });
 });
+
+test.describe("country flags", () => {
+  test("render as images, not codes, on the rankings", async ({ page }) => {
+    const failed: string[] = [];
+    page.on("response", (response) => {
+      if (response.url().includes("/flags/") && response.status() !== 200) {
+        failed.push(`${response.status()} ${response.url()}`);
+      }
+    });
+
+    await page.goto("/rankings");
+
+    const flags = page.locator('img[src^="/flags/"]');
+    await expect(flags.first()).toBeVisible();
+    expect(await flags.count()).toBeGreaterThan(5);
+    expect(failed, "flag images that did not load").toEqual([]);
+  });
+
+  test("carry the country name for assistive technology", async ({ page }) => {
+    await page.goto("/u/4");
+
+    // the image itself is decorative; the name is what gets announced
+    const flag = page.locator('img[src="/flags/hu.svg"]').first();
+    await expect(flag).toBeVisible();
+    await expect(flag).toHaveAttribute("alt", "");
+    await expect(page.getByText("Hungary").first()).toBeVisible();
+  });
+
+  test("really are drawn, not just requested", async ({ page }) => {
+    await page.goto("/u/4");
+
+    const flag = page.locator('img[src="/flags/hu.svg"]').first();
+    // a 404 or a broken svg leaves naturalWidth at 0
+    const drawn = await flag.evaluate(
+      (element) => (element as HTMLImageElement).naturalWidth > 0,
+    );
+    expect(drawn).toBe(true);
+  });
+});
