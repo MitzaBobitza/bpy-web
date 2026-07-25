@@ -7,8 +7,11 @@ multiplayer, accounts and settings — in an osu!-flavoured interface.
 Built with Next.js (App Router), React and Tailwind CSS. No database of its own:
 every page reads from bancho.py's HTTP API.
 
-> **Deploying it?** Follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Ubuntu,
-> nginx and Cloudflare, start to finish.
+> **Deploying it?** Follow [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). It assumes
+> bancho.py is already running from its
+> [official setup guide](https://github.com/osuAkatsuki/bancho.py/wiki/Setting-up)
+> and covers only what the website adds: nginx, DNS, and making avatars
+> reachable.
 
 ## What it covers
 
