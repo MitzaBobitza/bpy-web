@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
 
   poweredByHeader: false,
 
+  /**
+   * Emit a self-contained server bundle in `.next/standalone`, which is what
+   * the Dockerfile ships. `next start` keeps working either way, so running
+   * on the host directly is unaffected.
+   */
+  output: "standalone",
+
   async redirects() {
     return [
       // osu! links profiles as /users/{id}; keep those working

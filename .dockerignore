@@ -1,0 +1,17 @@
+# Patterns are anchored with a leading slash so they only ever match at the
+# context root. An unanchored `docs` would risk also matching src/app/docs,
+# which would silently drop the help pages from the image.
+/node_modules
+/.next
+/.git
+/.env
+/.env.*
+!/.env.example
+/screenshots
+/test-results
+/playwright-report
+/blob-report
+/tests
+/docs
+/README.md
+/LICENSE
