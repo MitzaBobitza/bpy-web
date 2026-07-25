@@ -168,7 +168,7 @@ You should see `{"status":"success","data":{"online_players":0,...}}`.
 
 ```bash
 cd ~
-git clone https://github.com/YOUR-USERNAME/bpy-web.git
+git clone https://github.com/MitzaBobitza/bpy-web.git
 cd bpy-web
 npm ci
 
