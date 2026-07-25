@@ -12,11 +12,13 @@ import { beatmapDownloadUrl } from "@/lib/config";
 import { formatDuration, formatNumber, formatRelative } from "@/lib/format";
 import { RANKED_STATUS } from "@/lib/osu/beatmaps";
 import { MODE_LIST, modeInfo } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Beatmaps",
   description: "Browse every beatmap tracked by the server, with leaderboards for each.",
-};
+  path: "/beatmaps",
+});
 
 const PAGE_SIZE = 24;
 

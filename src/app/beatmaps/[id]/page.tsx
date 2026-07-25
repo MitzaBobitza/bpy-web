@@ -15,6 +15,7 @@ import { beatmapDownloadUrl } from "@/lib/config";
 import { formatDate, formatDuration, formatNumber, formatStars } from "@/lib/format";
 import { difficultyColor, difficultyTier, isScoreable, statusLabel } from "@/lib/osu/beatmaps";
 import { MODE_LIST, modeInfo, toMode, vanillaMode } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -25,10 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const map = await getMap(Number.parseInt(id, 10));
   if (!map) return { title: "Beatmap not found" };
-  return {
+  return pageMetadata({
     title: `${map.artist} - ${map.title} [${map.version}]`,
     description: `Leaderboard for ${map.artist} - ${map.title} [${map.version}], mapped by ${map.creator}.`,
-  };
+    path: `/beatmaps/${map.id}`,
+    image: "own",
+  });
 }
 
 export default async function BeatmapPage({ params, searchParams }: Props) {

@@ -80,6 +80,10 @@ proxy.
 
 Under **SSL/TLS → Overview**, the mode must be **Full (strict)**.
 
+If you turn on **Bot Fight Mode** (Security → Bots), leave it off for the
+website, or link previews stop working: Discord, Slack and the rest fetch
+pages with their own crawler, and a challenge page has no preview in it.
+
 ---
 
 ## 3. Install the frontend
@@ -108,6 +112,10 @@ BANCHO_API_HOST=api.example.com
 
 NEXT_PUBLIC_SERVER_NAME=Your Server Name
 NEXT_PUBLIC_DOMAIN=example.com
+# where the site itself is reachable; the preview images Discord and the
+# rest show for a shared link are built from this, so it must be the real
+# public address
+NEXT_PUBLIC_SITE_URL=https://example.com
 NEXT_PUBLIC_AVATAR_URL=https://a.example.com
 NEXT_PUBLIC_BEATMAP_MIRROR_URL=https://catboy.best/d
 NEXT_PUBLIC_DISCORD_INVITE=

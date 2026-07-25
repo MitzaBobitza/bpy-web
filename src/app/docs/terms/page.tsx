@@ -3,11 +3,13 @@ import Link from "next/link";
 
 import { Doc, Section } from "@/components/docs/Doc";
 import { config } from "@/lib/config";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of service",
   description: "The terms you agree to by using the server.",
-};
+  path: "/docs/terms",
+});
 
 export default function TermsPage() {
   return (

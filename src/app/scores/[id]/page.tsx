@@ -28,6 +28,7 @@ import {
 import { difficultyTier, isScoreable } from "@/lib/osu/beatmaps";
 import { scoreStatusLabel } from "@/lib/osu/grades";
 import { modeInfo, vanillaMode } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -35,10 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const score = await getScore(Number.parseInt(id, 10));
   if (!score) return { title: "Score not found" };
-  return {
+  return pageMetadata({
     title: `${score.player.name} on ${score.beatmap.artist} - ${score.beatmap.title}`,
     description: `${formatAccuracy(score.acc)} for ${formatPp(score.pp)}pp on ${score.beatmap.title} [${score.beatmap.version}].`,
-  };
+    path: `/scores/${score.id}`,
+    image: "own",
+  });
 }
 
 export default async function ScorePage({ params }: Props) {

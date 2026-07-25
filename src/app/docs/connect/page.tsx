@@ -4,11 +4,13 @@ import Link from "next/link";
 import { Block, Code, Doc, Note, Section, Steps } from "@/components/docs/Doc";
 import { ButtonLink } from "@/components/ui/primitives";
 import { config } from "@/lib/config";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "How to connect",
   description: "Point your osu! client at the server and start playing.",
-};
+  path: "/docs/connect",
+});
 
 export default function ConnectPage() {
   const domain = config.domain;

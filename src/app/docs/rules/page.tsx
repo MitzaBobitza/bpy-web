@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 
 import { Code, Doc, Note, Section } from "@/components/docs/Doc";
 import { config } from "@/lib/config";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Rules",
   description: "What is and is not allowed on the server.",
-};
+  path: "/docs/rules",
+});
 
 export default function RulesPage() {
   return (

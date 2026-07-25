@@ -30,6 +30,9 @@ const monoData = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  // share images and canonical urls have to be absolute: a chat app
+  // unfurling a link has no page to resolve a relative one against
+  metadataBase: new URL(config.siteUrl),
   title: {
     default: `${config.serverName} — osu! private server`,
     template: `%s · ${config.serverName}`,
@@ -41,12 +44,21 @@ export const metadata: Metadata = {
     description: `Play osu! on ${config.serverName} with your own ranks and leaderboards.`,
     siteName: config.serverName,
     type: "website",
+    locale: "en",
+    url: "/",
+  },
+  twitter: {
+    // the wide card, which is also what Discord uses to decide between a
+    // thumbnail and a full-width image
+    card: "summary_large_image",
   },
   robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#171016",
+  // Discord tints an embed's left edge with this, so it carries the
+  // server's accent rather than disappearing into the message background
+  themeColor: "#ff66ab",
   colorScheme: "dark",
 };
 

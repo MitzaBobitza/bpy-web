@@ -7,11 +7,13 @@ import { getMappools } from "@/lib/bancho/api";
 import type { Mappool, MappoolMap } from "@/lib/bancho/types";
 import { formatDate, formatDuration } from "@/lib/format";
 import { modeInfo } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Tournaments",
   description: "Tournament mappools published on the server.",
-};
+  path: "/tournaments",
+});
 
 export default async function TournamentsPage() {
   // bancho.py resolves a pool's creator from its in-memory session list, so

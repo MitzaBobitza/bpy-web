@@ -27,6 +27,7 @@ every page reads from bancho.py's HTTP API.
 | **Accounts** | Registration with optional captcha, sign-in, sign-out, avatar upload, username / country / default mode / userpage editing, password change |
 | **Social** | Friends list, add and remove friends, favourite beatmaps |
 | **Help** | How to connect, rules, FAQ, terms of service, privacy policy |
+| **Link previews** | Generated share images for profiles, beatmaps, scores and clans — see below |
 | **Staff area** | Player moderation, privileges, beatmap nominations, mappools, announcements and maintenance — see below |
 
 ## How it talks to bancho.py
@@ -114,6 +115,33 @@ Every setting is in `.env.example`, with notes. Two are worth calling out:
   `CAPTCHA_PROVIDER` and `CAPTCHA_SECRET`, and this app renders the widget with
   `NEXT_PUBLIC_CAPTCHA_PROVIDER` and `NEXT_PUBLIC_CAPTCHA_SITEKEY`. Leave all
   four empty to disable it.
+
+## Link previews
+
+Posting a link in Discord, Slack, Twitter or iMessage unfurls it into a card
+drawn from live data, at the 1200×630 those apps expect:
+
+| Link | The card shows |
+|---|---|
+| A profile | Avatar, country, global rank, pp, accuracy, play count and grade counts |
+| A beatmap | The set's cover art, artist, title, difficulty name, star rating in osu!'s colour, BPM, combo and plays |
+| A score | Grade on its own plate, player, beatmap, mods, pp, accuracy, combo and misses |
+| A clan | Tag, name, the first of the roster with their ranks, and member count |
+| Anything else | The server card, with its player counts |
+
+The images are generated per request by `next/og`, so they are always current
+and there is nothing to regenerate when a player's rank moves. Nunito is
+vendored under `src/lib/og-assets` rather than fetched, so a server that
+cannot reach the internet still produces them; a cover or avatar that will not
+load is skipped rather than failing the card.
+
+**`NEXT_PUBLIC_SITE_URL` has to be the site's real public address.** Preview
+images are referenced by absolute url, and a chat app has no page to resolve a
+relative one against. It defaults to `https://` plus `NEXT_PUBLIC_DOMAIN`.
+
+Discord tints an embed's left edge with `theme-color`, which is the server's
+pink here rather than the page background — that colour also becomes the
+browser chrome on mobile.
 
 ## Clans
 

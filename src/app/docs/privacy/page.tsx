@@ -3,11 +3,13 @@ import Link from "next/link";
 
 import { Doc, Section } from "@/components/docs/Doc";
 import { config } from "@/lib/config";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy policy",
   description: "What data the server stores and why.",
-};
+  path: "/docs/privacy",
+});
 
 export default function PrivacyPage() {
   return (

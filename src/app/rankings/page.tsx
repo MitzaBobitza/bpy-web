@@ -16,11 +16,13 @@ import {
 } from "@/lib/format";
 import { countryName } from "@/lib/osu/countries";
 import { MODES_BY_GROUP, modeInfo, toMode } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Rankings",
   description: "Global and country performance rankings for every game mode.",
-};
+  path: "/rankings",
+});
 
 const PAGE_SIZE = 50;
 

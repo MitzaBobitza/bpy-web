@@ -9,6 +9,7 @@ import { getClan, getPlayerStats } from "@/lib/bancho/api";
 import { getClanInvites, getClanMembership, getClanRoster } from "@/lib/bancho/clans";
 import { getCurrentPlayer } from "@/lib/bancho/session";
 import { formatDate, formatNumber, formatPp, formatRank } from "@/lib/format";
+import { pageMetadata } from "@/lib/metadata";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -16,10 +17,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const clan = await getClan(Number.parseInt(id, 10));
   if (!clan) return { title: "Clan not found" };
-  return {
+  return pageMetadata({
     title: `${clan.name} [${clan.tag}]`,
     description: `The ${clan.name} clan on the server: members and their standings.`,
-  };
+    path: `/clans/${clan.id}`,
+    image: "own",
+  });
 }
 
 export default async function ClanPage({ params }: Props) {

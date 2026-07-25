@@ -46,6 +46,7 @@ import {
   hasStaffAccess,
   playStyleLabels,
 } from "@/lib/osu/privileges";
+import { pageMetadata } from "@/lib/metadata";
 
 type Props = {
   params: Promise<{ idOrName: string }>;
@@ -56,10 +57,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { idOrName } = await params;
   const player = await getPlayer(decodeURIComponent(idOrName));
   if (!player) return { title: "Player not found" };
-  return {
+  return pageMetadata({
     title: player.name,
     description: `${player.name}'s osu! profile: ranks, top plays and statistics.`,
-  };
+    path: `/u/${player.id}`,
+    type: "profile",
+    image: "own",
+  });
 }
 
 export default async function ProfilePage({ params, searchParams }: Props) {

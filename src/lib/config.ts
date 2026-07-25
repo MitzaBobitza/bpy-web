@@ -12,6 +12,7 @@ function pub(name: string, fallback: string): string {
   const values: Record<string, string | undefined> = {
     NEXT_PUBLIC_SERVER_NAME: process.env.NEXT_PUBLIC_SERVER_NAME,
     NEXT_PUBLIC_DOMAIN: process.env.NEXT_PUBLIC_DOMAIN,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     NEXT_PUBLIC_AVATAR_URL: process.env.NEXT_PUBLIC_AVATAR_URL,
     NEXT_PUBLIC_BEATMAP_MIRROR_URL: process.env.NEXT_PUBLIC_BEATMAP_MIRROR_URL,
     NEXT_PUBLIC_DISCORD_INVITE: process.env.NEXT_PUBLIC_DISCORD_INVITE,
@@ -29,6 +30,13 @@ export const config = {
   serverName: pub("NEXT_PUBLIC_SERVER_NAME", "Sunrise"),
   /** Root domain bancho.py is configured with (its `DOMAIN` setting). */
   domain,
+  /**
+   * Where this website is reachable, absolute and without a trailing slash.
+   *
+   * Link previews need absolute urls: a chat app resolving a share image
+   * has no page to resolve a relative one against.
+   */
+  siteUrl: pub("NEXT_PUBLIC_SITE_URL", `https://${domain}`).replace(/\/+$/, ""),
   /** Where player avatars are served from (nginx serves `a.{domain}`). */
   avatarUrl: pub("NEXT_PUBLIC_AVATAR_URL", `https://a.${domain}`),
   /** Beatmap mirror used for `.osz` downloads. */

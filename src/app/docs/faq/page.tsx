@@ -3,11 +3,13 @@ import Link from "next/link";
 
 import { Code, Doc, Faq, Section } from "@/components/docs/Doc";
 import { config } from "@/lib/config";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "FAQ",
   description: "Common questions about playing on the server.",
-};
+  path: "/docs/faq",
+});
 
 export default function FaqPage() {
   return (

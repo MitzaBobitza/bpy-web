@@ -6,11 +6,13 @@ import { Chip, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives
 import { getActiveMatches } from "@/lib/bancho/api";
 import type { Match, MatchSlot } from "@/lib/bancho/types";
 import { modeInfo } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Multiplayer",
   description: "Multiplayer matches running on the server right now.",
-};
+  path: "/multiplayer",
+});
 
 /** Matches live in memory only, so this page is always freshly fetched. */
 export const dynamic = "force-dynamic";

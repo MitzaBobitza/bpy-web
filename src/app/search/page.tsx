@@ -8,11 +8,13 @@ import { EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getPlayer, getPlayerStats, searchPlayers } from "@/lib/bancho/api";
 import { formatPp, formatRank, formatRelative } from "@/lib/format";
 import { modeInfo } from "@/lib/osu/gamemodes";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Find players",
   description: "Search the server for players by name.",
-};
+  path: "/search",
+});
 
 /** Enough to be useful without a wall of profile lookups. */
 const MAX_RESULTS = 30;

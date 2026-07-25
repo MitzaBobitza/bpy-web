@@ -21,6 +21,17 @@ const nextConfig: NextConfig = {
    */
   output: "standalone",
 
+  /**
+   * Keep the share-image fonts in the standalone bundle.
+   *
+   * They are read from disk at request time rather than imported, so
+   * nothing links them into the build graph; without this a Docker image
+   * would ship without them and every generated preview would fail.
+   */
+  outputFileTracingIncludes: {
+    "/**": ["./src/lib/og-assets/*.ttf"],
+  },
+
   async redirects() {
     return [
       // osu! links profiles as /users/{id}; keep those working

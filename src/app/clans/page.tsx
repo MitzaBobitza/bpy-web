@@ -9,11 +9,13 @@ import { getClans } from "@/lib/bancho/api";
 import { getClanRoster, getMyClanInvitations } from "@/lib/bancho/clans";
 import { getCurrentPlayer } from "@/lib/bancho/session";
 import { formatDate, formatNumber } from "@/lib/format";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Clans",
   description: "Every clan on the server and who plays for them.",
-};
+  path: "/clans",
+});
 
 const PAGE_SIZE = 30;
 
