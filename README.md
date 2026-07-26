@@ -102,8 +102,20 @@ npm run dev                 # in one shell, with bancho.py already running
 npm run test:e2e            # in another
 ```
 
-The account tests register throwaway accounts and delete nothing, so point them
-at a development database rather than a live server.
+The staff area and clan suites sign in as an account that already exists and
+holds every privilege. Point them at one through the environment — no
+credential is kept in the repository, and those suites skip themselves when it
+is not set:
+
+```bash
+export E2E_STAFF_USERNAME=yourstaffaccount
+export E2E_STAFF_PASSWORD=...
+npm run test:e2e
+```
+
+**Point all of this at a development database, never a live server.** The tests
+register throwaway accounts and delete nothing, and the staff suites restrict
+players, disband clans and wipe scores.
 
 ## Configuration
 

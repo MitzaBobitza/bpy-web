@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { requireStaffAccount, STAFF as OWNER } from "./credentials";
+
 /**
  * The staff area, driven against a live bancho.py.
  *
@@ -9,7 +11,7 @@ import { expect, test, type Page } from "@playwright/test";
  * sections. That exercises the real privilege plumbing rather than a fixture.
  */
 
-const OWNER = { username: "mitza", password: "myPassword321$" };
+
 const PASSWORD = "adminE2E123!";
 
 /** A beatmap no other spec depends on, for the destructive tests. */
@@ -86,10 +88,28 @@ async function grantRoles(page: Page, playerId: number, roles: string[]): Promis
     await privileges.getByRole("button", { name: new RegExp(`^${role}`, "i") }).click();
   }
   await privileges.getByRole("button", { name: "Grant selected" }).click();
-  await expect(page.getByText("Privileges granted.")).toBeVisible({ timeout: 15_000 });
+
+  // wait for the privileges the grant produced, not the message announcing
+  // it: the refresh that follows a successful action remounts the panel and
+  // clears the message, which is a race the assertion can lose on a slow run
+  const held = heldPrivileges(page);
+  for (const role of roles) {
+    await expect(held.getByText(new RegExp(`^${role}`, "i"))).toBeVisible({
+      timeout: 15_000,
+    });
+  }
+}
+
+/** The "Privileges held" chips, which outlast any success message. */
+function heldPrivileges(page: Page) {
+  return page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Privileges held" }) });
 }
 
 test.describe("staff area access", () => {
+  requireStaffAccount();
+
   test("anonymous visitors are sent to sign in", async ({ page }) => {
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/login/);
@@ -164,6 +184,8 @@ test.describe("staff area access", () => {
 });
 
 test.describe("player moderation", () => {
+  requireStaffAccount();
+
   test("a note is recorded and shows in the history", async ({ page }) => {
     const subject = await register(page);
     await signIn(page, OWNER.username, OWNER.password);
@@ -318,6 +340,8 @@ test.describe("player moderation", () => {
 });
 
 test.describe("beatmaps and mappools", () => {
+  requireStaffAccount();
+
   test("a nominator can change a beatmap's status", async ({ page }) => {
     await signIn(page, OWNER.username, OWNER.password);
 
@@ -394,6 +418,8 @@ test.describe("beatmaps and mappools", () => {
 });
 
 test.describe("announcements and maintenance", () => {
+  requireStaffAccount();
+
   test("an announcement needs confirming before it is sent", async ({ page }) => {
     await signIn(page, OWNER.username, OWNER.password);
     await page.goto("/admin/announcements");
@@ -426,6 +452,8 @@ test.describe("announcements and maintenance", () => {
 });
 
 test.describe("audit log", () => {
+  requireStaffAccount();
+
   test("actions appear in the log and can be filtered", async ({ page }) => {
     const subject = await register(page);
     await signIn(page, OWNER.username, OWNER.password);
@@ -447,6 +475,8 @@ test.describe("audit log", () => {
 });
 
 test.describe("staff area layout", () => {
+  requireStaffAccount();
+
   test("no page scrolls sideways at any width", async ({ page }) => {
     await signIn(page, OWNER.username, OWNER.password);
 
@@ -480,6 +510,8 @@ test.describe("staff area layout", () => {
 });
 
 test.describe("clan administration", () => {
+  requireStaffAccount();
+
   /** Found a clan as a fresh player, returning its id and name. */
   async function foundClan(page: Page): Promise<{ id: number; name: string }> {
     const account = await register(page);

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { requireStaffAccount, STAFF } from "./credentials";
+
 /**
  * Clan management, driven against a live bancho.py.
  *
@@ -9,7 +11,7 @@ import { expect, test, type Page } from "@playwright/test";
  * same rule that keeps them out of player search.
  */
 
-const STAFF = { username: "mitza", password: "myPassword321$" };
+
 const PASSWORD = "clanE2E123!";
 
 function uniqueName(): string {
@@ -85,7 +87,15 @@ async function createPlayer(page: Page): Promise<string> {
   const privileges = card(page, "Privileges");
   await privileges.getByRole("button", { name: /^Verified/i }).click();
   await privileges.getByRole("button", { name: "Grant selected" }).click();
-  await expect(page.getByText("Privileges granted.")).toBeVisible({ timeout: 15_000 });
+
+  // the success message is cleared by the refresh that follows it, so wait
+  // for the privilege itself to appear rather than racing the message
+  await expect(
+    page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "Privileges held" }) })
+      .getByText("Verified"),
+  ).toBeVisible({ timeout: 15_000 });
   await signOut(page);
 
   return username;
@@ -128,6 +138,8 @@ async function inviteAndAccept(
 }
 
 test.describe("clan visibility", () => {
+  requireStaffAccount();
+
   test("anonymous visitors see the roster but no controls", async ({ page }) => {
     await page.goto("/clans/1");
 
@@ -159,6 +171,8 @@ test.describe("clan visibility", () => {
 });
 
 test.describe("founding a clan", () => {
+  requireStaffAccount();
+
   test("the creator becomes its owner", async ({ page }) => {
     const founder = await createPlayer(page);
     await signIn(page, founder, PASSWORD);
@@ -228,6 +242,8 @@ test.describe("founding a clan", () => {
 });
 
 test.describe("invitations", () => {
+  requireStaffAccount();
+
   test("an invited player can accept and join", async ({ page }) => {
     const owner = await createPlayer(page);
     const invitee = await createPlayer(page);
@@ -346,6 +362,8 @@ test.describe("invitations", () => {
 });
 
 test.describe("ranks and removal", () => {
+  requireStaffAccount();
+
   test("the owner can promote and demote", async ({ page }) => {
     const owner = await createPlayer(page);
     const member = await createPlayer(page);
@@ -456,6 +474,8 @@ test.describe("ranks and removal", () => {
 });
 
 test.describe("ownership and disbanding", () => {
+  requireStaffAccount();
+
   test("ownership can be transferred, leaving the founder an officer", async ({
     page,
   }) => {

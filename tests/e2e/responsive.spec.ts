@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { requireStaffAccount, STAFF } from "./credentials";
+
 /**
  * The page body must never scroll sideways.
  *
@@ -57,9 +59,11 @@ test.describe("responsive layout", () => {
    * buttons beside a member's stats is exactly what overflows a phone.
    */
   test("pages behind a sign-in do not scroll sideways either", async ({ page }) => {
+    requireStaffAccount();
+
     await page.goto("/login");
-    await page.getByLabel("Username").fill("mitza");
-    await page.getByLabel("Password").fill("myPassword321$");
+    await page.getByLabel("Username").fill(STAFF.username);
+    await page.getByLabel("Password").fill(STAFF.password);
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL((url) => !url.pathname.startsWith("/login"), {
       timeout: 20_000,
