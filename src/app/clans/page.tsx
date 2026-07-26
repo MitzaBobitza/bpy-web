@@ -64,7 +64,10 @@ export default async function ClansPage({
         </div>
       ) : null}
 
-      {invitations.length > 0 ? (
+      {/* shown empty as well, so there is somewhere to look — a panel that
+          only exists once it has something in it cannot be checked. Members
+          of a clan only see it if an invite is somehow still pending. */}
+      {viewer && (!ownClanId || invitations.length > 0) ? (
         <div className="mt-5">
           <InvitationsInbox invitations={invitations} />
         </div>

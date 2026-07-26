@@ -25,9 +25,12 @@ const NAV_ITEMS = [
 export function Header({
   player,
   onlinePlayers,
+  clanInvites = 0,
 }: {
   player: Player | null;
   onlinePlayers: number | null;
+  /** Pending clan invites, surfaced on the account menu. */
+  clanInvites?: number;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -71,7 +74,7 @@ export function Header({
           <OnlineBadge count={onlinePlayers} />
 
           {player ? (
-            <UserMenu player={player} />
+            <UserMenu player={player} clanInvites={clanInvites} />
           ) : (
             // signing in stays one tap away at every width; the longer
             // call to action waits until there is room for it

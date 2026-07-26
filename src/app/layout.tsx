@@ -4,6 +4,7 @@ import { JetBrains_Mono, Nunito } from "next/font/google";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { getServerStats } from "@/lib/bancho/api";
+import { getMyClanInvitations } from "@/lib/bancho/clans";
 import { getCurrentPlayer } from "@/lib/bancho/session";
 import { config } from "@/lib/config";
 
@@ -64,7 +65,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // resolved once per request and shared by the header
-  const [player, stats] = await Promise.all([getCurrentPlayer(), getServerStats()]);
+  const [player, stats, invitations] = await Promise.all([
+    getCurrentPlayer(),
+    getServerStats(),
+    // a clan invite is the one thing that happens to a player without them
+    // doing anything, so the header has to be able to say so
+    getMyClanInvitations(),
+  ]);
 
   return (
     <html lang="en" className={`${nunito.variable} ${monoData.variable} h-full antialiased`}>
@@ -75,7 +82,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header player={player} onlinePlayers={stats?.online_players ?? null} />
+        <Header
+          player={player}
+          onlinePlayers={stats?.online_players ?? null}
+          clanInvites={invitations.length}
+        />
         <main id="main" className="flex-1">
           {children}
         </main>

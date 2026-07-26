@@ -294,9 +294,11 @@ test.describe("invitations", () => {
     await page.goto("/clans");
     await page.getByRole("button", { name: "Decline" }).click();
 
-    await expect(page.getByRole("heading", { name: /Clan invites/ })).toHaveCount(0, {
+    // the inbox stays, so it can still be checked; what goes is the invite
+    await expect(page.getByText("No pending invites.")).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByRole("button", { name: "Accept" })).toHaveCount(0);
     // still free to found their own
     await expect(page.getByRole("button", { name: "Create clan" })).toBeVisible();
   });
@@ -322,7 +324,12 @@ test.describe("invitations", () => {
     await signOut(page);
     await signIn(page, invitee, PASSWORD);
     await page.goto("/clans");
-    await expect(page.getByRole("heading", { name: /Clan invites/ })).toHaveCount(0);
+
+    // nothing waiting for them, and nothing claiming otherwise
+    await expect(page.getByText("No pending invites.")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Account menu for/i }),
+    ).not.toHaveAttribute("aria-label", /invite/);
   });
 
   test("inviting an unknown player says so", async ({ page }) => {
@@ -556,5 +563,57 @@ test.describe("ownership and disbanding", () => {
 
     const response = await page.goto(clanUrl);
     expect(response?.status()).toBe(404);
+  });
+});
+
+test.describe("finding an invite", () => {
+  requireStaffAccount();
+
+  test('the account menu announces one, from any page', async ({ page }) => {
+    const owner = await createPlayer(page);
+    const invitee = await createPlayer(page);
+
+    await signIn(page, owner, PASSWORD);
+    await foundClan(page);
+    const invite = card(page, "Invite a player");
+    await invite.getByLabel("Username").fill(invitee);
+    await invite.getByRole("button", { name: "Send invite" }).click();
+    await expect(page.getByText(`${invitee} was invited.`)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await signOut(page);
+    await signIn(page, invitee, PASSWORD);
+
+    // on a page with nothing to do with clans: being invited has to announce
+    // itself, or nobody would know to go looking for it
+    await page.goto("/rankings");
+    const trigger = page.getByRole("button", { name: /Account menu for/i });
+    await expect(trigger).toHaveAttribute("aria-label", /1 clan invite waiting/);
+
+    await trigger.click();
+    const menuItem = page.getByRole("menuitem", { name: /Clan invites/ });
+    await expect(menuItem).toBeVisible();
+    await menuItem.click();
+
+    await page.waitForURL(/\/clans$/, { timeout: 20_000 });
+    await expect(
+      page.getByRole("heading", { name: /Clan invites \(1\)/ }),
+    ).toBeVisible();
+  });
+
+  test("the inbox is there to check even with nothing in it", async ({ page }) => {
+    const player = await createPlayer(page);
+    await signIn(page, player, PASSWORD);
+    await page.goto("/clans");
+
+    // an inbox that only exists once it has something in it cannot be checked
+    await expect(page.getByRole("heading", { name: "Clan invites" })).toBeVisible();
+    await expect(page.getByText("No pending invites.")).toBeVisible();
+
+    // and nothing claims an invite is waiting
+    await expect(
+      page.getByRole("button", { name: /Account menu for/i }),
+    ).not.toHaveAttribute("aria-label", /invite/);
   });
 });

@@ -22,7 +22,20 @@ function clanHref(player: Player): string {
   return player.clan_id ? `/clans/${player.clan_id}` : "/clans";
 }
 
-export function UserMenu({ player }: { player: Player }) {
+export function UserMenu({
+  player,
+  clanInvites = 0,
+}: {
+  player: Player;
+  /**
+   * Pending clan invites.
+   *
+   * Being invited is the one thing that happens to a player without them
+   * doing anything, so it has to announce itself — nobody goes looking for
+   * an invite they have no reason to believe exists.
+   */
+  clanInvites?: number;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -65,10 +78,24 @@ export function UserMenu({ player }: { player: Player }) {
         aria-haspopup="menu"
         // the name is hidden below the sm breakpoint, so it is stated here
         // to keep the control named at every size
-        aria-label={`Account menu for ${player.name}`}
+        aria-label={
+          clanInvites > 0
+            ? `Account menu for ${player.name}, ${clanInvites} clan ${
+                clanInvites === 1 ? "invite" : "invites"
+              } waiting`
+            : `Account menu for ${player.name}`
+        }
         className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition hover:bg-surface-2"
       >
-        <Avatar playerId={player.id} name={player.name} size={30} rounded="full" />
+        <span className="relative flex">
+          <Avatar playerId={player.id} name={player.name} size={30} rounded="full" />
+          {clanInvites > 0 ? (
+            <span
+              aria-hidden="true"
+              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-pink ring-2 ring-void"
+            />
+          ) : null}
+        </span>
         <span className="hidden max-w-24 truncate text-sm font-bold text-ink sm:block">
           {player.name}
         </span>
@@ -116,6 +143,19 @@ export function UserMenu({ player }: { player: Player }) {
             >
               {player.clan_id ? "My clan" : "Clans"}
             </Link>
+            {clanInvites > 0 ? (
+              <Link
+                href="/clans"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between px-3 py-2 text-sm font-bold text-pink transition hover:bg-surface-3"
+              >
+                Clan invites
+                <span className="rounded-full bg-pink px-1.5 text-[11px] font-black text-void">
+                  {clanInvites}
+                </span>
+              </Link>
+            ) : null}
           </nav>
           <div className="border-t border-line p-1">
             <button

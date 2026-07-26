@@ -11,9 +11,24 @@ import {
 import type { PendingClanInvite } from "@/lib/bancho/clan-types";
 import { formatDate } from "@/lib/format";
 
-/** Clan invites awaiting the signed-in player. */
+/**
+ * Clan invites awaiting the signed-in player.
+ *
+ * Shown even with none pending: a player who has been told to expect an
+ * invite needs somewhere to look, and an inbox that only exists once it has
+ * something in it cannot be checked.
+ */
 export function InvitationsInbox({ invitations }: { invitations: PendingClanInvite[] }) {
-  if (invitations.length === 0) return null;
+  if (invitations.length === 0) {
+    return (
+      <ManageCard
+        title="Clan invites"
+        description="Nothing waiting. An officer inviting you by username puts it here, and you will see a mark on your avatar."
+      >
+        <p className="text-sm text-faint">No pending invites.</p>
+      </ManageCard>
+    );
+  }
 
   return (
     <ManageCard
