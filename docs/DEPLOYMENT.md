@@ -523,6 +523,55 @@ match them, or clear all four values on both sides to disable it.
 
 **Avatars 404.** Step 5.
 
+**The clan or staff pages error, and `clan_invites` does not exist.** The
+migration did not run. It exits quietly in three cases, so find out which:
+
+```bash
+cd ~/bancho.py
+set -a; . ./.env; set +a
+
+# 1. is the running code actually the fork?
+docker compose exec -T bancho grep '^version' pyproject.toml     # want 5.3.1
+
+# 2. what does the database think it last ran?
+docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+  -e "SELECT ver_major, ver_minor, ver_micro, datetime FROM startups ORDER BY datetime DESC LIMIT 1"
+```
+
+- **Version is 5.3.0** — the image is stale. `docker compose up -d` on its own
+  does not rebuild. Run `docker compose build bancho && docker compose up -d`.
+- **`startups` already says 5.3.1** — the runner thinks it is done. Apply the
+  table by hand, below.
+- **`startups` is empty** — on a database with no startup row the runner
+  records the version and applies nothing at all. Apply the table by hand.
+
+Applying it by hand is safe — this is the same statement the migration runs:
+
+```bash
+docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" <<'SQL'
+CREATE TABLE IF NOT EXISTS clan_invites (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  clan_id    INT NOT NULL,
+  user_id    INT NOT NULL,
+  created_by INT NOT NULL,
+  created_at DATETIME NOT NULL,
+  CONSTRAINT clan_invites_clan_id_user_id_uindex UNIQUE (clan_id, user_id),
+  KEY clan_invites_user_id_index (user_id)
+);
+SQL
+```
+
+Then confirm, and restart so bancho.py picks the table up:
+
+```bash
+docker compose exec -T mysql mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" \
+  -e "SHOW CREATE TABLE clan_invites\G"
+docker compose restart bancho
+```
+
+`CREATE TABLE IF NOT EXISTS` means running this when the table already exists
+does nothing, and leaves the migration free to run normally later.
+
 **Logs.**
 
 ```bash
