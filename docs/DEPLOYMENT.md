@@ -161,20 +161,43 @@ bancho.py routes its entire API on `api.{DOMAIN}` and 404s anything else.
 
 ## 2. DNS
 
-The official setup already covers the game subdomains. The website needs two
-more records, both `A` records pointing at your server:
+The official guide does not cover DNS, so here is the whole set. Every record
+is an `A` record pointing at your server's IPv4 address; add the matching
+`AAAA` records too if you serve IPv6.
 
-| Name | Cloudflare proxy |
-|---|---|
-| `example.com` | **Proxied** (orange cloud) |
-| `www` | **Proxied** (orange cloud) |
+The last two are what the website adds — the rest are bancho.py's, taken from
+the `server_name` lines in its own `ext/nginx.conf.example`.
 
-Proxying the website is fine and gives you Cloudflare's caching and DDoS
-protection. Leave the game subdomains (`c`, `ce`, `c4`, `osu`, `b`) as they are —
-**DNS only** — because the osu! client will not log in through Cloudflare's
-proxy.
+| Name | Serves | Cloudflare proxy |
+|---|---|---|
+| `c` | bancho: login, chat, presence | **DNS only** |
+| `ce` | bancho | **DNS only** |
+| `c4` | bancho | **DNS only** |
+| `osu` | score submission, leaderboards, osu!direct, replays | **DNS only** |
+| `b` | beatmap thumbnails the client fetches | **DNS only** |
+| `a` | avatars | **DNS only** |
+| `assets` | static assets | **DNS only** |
+| `api` | bancho.py's API | **DNS only** |
+| `@` (the root) | the website | **Proxied** |
+| `www` | the website | **Proxied** |
 
-Under **SSL/TLS → Overview**, the mode must be **Full (strict)**.
+**The game subdomains must stay DNS only (grey cloud).** The osu! client will
+not complete a login through Cloudflare's proxy. That is certain for `c`,
+`ce`, `c4` and `osu`; `a`, `b` and `assets` are only static files and would
+probably survive being proxied, but the client fetches them too and there is
+nothing to gain by finding out.
+
+`api` is a special case: the website never resolves it. It reaches bancho.py
+over localhost and sets the `Host` header itself, so this record only matters
+if something outside your server uses the API. Leave it DNS only, or leave it
+out entirely.
+
+Proxying the root and `www` is what you want — Cloudflare's caching and DDoS
+protection in front of the website, and nothing the game client touches.
+
+Under **SSL/TLS → Overview**, the mode must be **Full (strict)**. Your origin
+certificate has to cover every name above; a Cloudflare Origin Certificate
+for `example.com` and `*.example.com` covers all of them at once.
 
 If you turn on **Bot Fight Mode** (Security → Bots), leave it off for the
 website, or link previews stop working: Discord, Slack and the rest fetch
