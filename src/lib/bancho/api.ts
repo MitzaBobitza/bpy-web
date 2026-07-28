@@ -1,5 +1,7 @@
 import "server-only";
 
+import { MATCH_SLOT_IDS } from "@/lib/osu/matches";
+
 import { apiGet, apiGetPage, query, upstreamFetch } from "./server";
 import type {
   BeatmapRecord,
@@ -281,7 +283,7 @@ async function v1Get<T>(path: string): Promise<T | null> {
 
 // ── multiplayer & tournaments (v1 only) ──────────────────────────────────
 
-/** Live multiplayer match state. bancho.py holds match slots 1-64 in memory. */
+/** Live multiplayer match state. bancho.py holds match slots in memory. */
 export async function getMatch(matchId: number): Promise<Match | null> {
   const payload = await v1Get<{ status: string; match: Match }>(
     `/v1/get_match${query({ id: matchId })}`,
@@ -291,9 +293,8 @@ export async function getMatch(matchId: number): Promise<Match | null> {
 
 /** Scan every match slot, returning the ones currently in use. */
 export async function getActiveMatches(): Promise<{ id: number; match: Match }[]> {
-  const slots = Array.from({ length: 64 }, (_, index) => index + 1);
   const results = await Promise.all(
-    slots.map(async (id) => {
+    MATCH_SLOT_IDS.map(async (id) => {
       const match = await getMatch(id);
       return match ? { id, match } : null;
     }),
