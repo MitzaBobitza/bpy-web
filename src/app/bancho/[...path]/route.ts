@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { forwardableHeaders, HOP_BY_HOP } from "@/lib/bancho/forwarding";
 import { hostFetch } from "@/lib/bancho/transport";
 import { serverConfig } from "@/lib/config";
 
@@ -20,32 +21,11 @@ import { serverConfig } from "@/lib/config";
  * the headers its IP resolver expects.
  */
 
-/** Headers that belong to a single connection and must not be forwarded. */
-const HOP_BY_HOP = new Set([
-  "connection",
-  "keep-alive",
-  "transfer-encoding",
-  "upgrade",
-  "proxy-authenticate",
-  "proxy-authorization",
-  "te",
-  "trailer",
-  "host",
-  "content-length",
-  // the upstream response is decoded by the transport, so any encoding
-  // header from either side would misdescribe the body we forward
-  "accept-encoding",
-  "content-encoding",
-]);
-
 function clientIp(request: Request): string {
+  // a reverse proxy appends the peer to X-Forwarded-For, so its last hop is
+  // the only one it vouches for; anything earlier came from the caller
   const forwardedFor = request.headers.get("x-forwarded-for");
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    forwardedFor?.split(",")[0]?.trim() ??
-    "127.0.0.1"
-  );
+  return forwardedFor?.split(",").at(-1)?.trim() || "127.0.0.1";
 }
 
 /**
@@ -65,13 +45,7 @@ async function proxy(request: Request, path: string[]): Promise<Response> {
   const url = new URL(request.url);
   const target = `${serverConfig.upstreamUrl}/${path.map(encodeURIComponent).join("/")}${url.search}`;
 
-  const ip = clientIp(request);
-  const outgoing: Record<string, string> = {};
-  for (const [key, value] of request.headers) {
-    if (!HOP_BY_HOP.has(key.toLowerCase())) outgoing[key] = value;
-  }
-  outgoing["x-forwarded-for"] = request.headers.get("x-forwarded-for") ?? ip;
-  outgoing["x-real-ip"] = ip;
+  const outgoing = forwardableHeaders(request.headers, clientIp(request));
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
 

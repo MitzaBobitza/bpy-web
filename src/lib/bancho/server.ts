@@ -26,33 +26,25 @@ export interface UpstreamOptions {
 /**
  * Proxy headers bancho.py expects.
  *
- * Its IP resolver reads `CF-Connecting-IP`, or else needs a multi-hop
- * `X-Forwarded-For` alongside an `X-Real-IP` — without one of those,
- * registration fails with a KeyError. See `IPResolver` in
- * app/state/services.py.
+ * Its IP resolver reads `X-Real-IP`, falling back to the last hop of
+ * `X-Forwarded-For` — without one of those, registration fails with a
+ * KeyError. See `IPResolver` in app/state/services.py.
+ *
+ * The address is stated from what this server observed rather than relayed:
+ * the upstream trusts these headers, and a browser can send any of them.
  */
 export async function proxyHeaders(): Promise<Record<string, string>> {
   const incoming = await headers();
-  const forwardedFor = incoming.get("x-forwarded-for");
-  const realIp =
-    incoming.get("cf-connecting-ip") ??
-    incoming.get("x-real-ip") ??
-    forwardedFor?.split(",")[0]?.trim() ??
-    "127.0.0.1";
+  // a reverse proxy appends the peer to X-Forwarded-For, so its last hop is
+  // the only one it vouches for; earlier entries came from the caller, as did
+  // any CF-* header reaching us from a browser
+  const realIp = incoming.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "127.0.0.1";
 
-  const result: Record<string, string> = {
-    "x-forwarded-for": forwardedFor ?? realIp,
+  return {
+    "x-forwarded-for": realIp,
     "x-real-ip": realIp,
     accept: "application/json",
   };
-
-  const cfIp = incoming.get("cf-connecting-ip");
-  if (cfIp) result["cf-connecting-ip"] = cfIp;
-  // bancho.py geolocates new accounts from request headers when it can
-  const cfCountry = incoming.get("cf-ipcountry");
-  if (cfCountry) result["cf-ipcountry"] = cfCountry;
-
-  return result;
 }
 
 /** Perform a request against the bancho.py upstream. */
